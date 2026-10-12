@@ -1427,6 +1427,7 @@ function render(){
   nav.innerHTML=`<div class="in">${TABS.map(([v,label,icon])=>`<button data-act="tab" data-v="${v}" ${cur===v?'aria-current="page"':""}>${icon}${label}</button>`).join("")}</div>`;
   nav.hidden=false;
 }
+const QL_STYLE="display:flex;align-items:center;justify-content:space-between;min-height:64px;padding:16px 20px;border:2px solid var(--volt);border-radius:12px;background:var(--volt);color:var(--on-volt);font-family:inherit;font-weight:800;font-size:1.15rem;line-height:1.1;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-align:left";
 function viewToday(){
   const kid=band()==="kid"||band()==="junior";
   return `<section class="hero" style="min-height:0;padding-bottom:8px"><div class="wrap"><div class="stack" style="gap:18px">
@@ -1434,10 +1435,10 @@ function viewToday(){
     <h1>${kid?`Let's go, <em class="v">${esc(S.nick)}!</em>`:`Ready, <em class="v">${esc(S.nick)}.</em>`}</h1>
     ${todayBlock()}
     <div class="stack" style="gap:10px"><span class="eyebrow">Quick links</span>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
-        <button class="more" data-act="tab" data-v="path">Level map ${ARROW}</button>
-        <button class="more" data-act="tab" data-v="journal">Journal ${ARROW}</button>
-        <button class="more" data-act="tab" data-v="fuel">Nutrition ${ARROW}</button>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        <button data-act="tab" data-v="path" style="${QL_STYLE}">Level map <span aria-hidden="true" style="font-size:1.4em">${ARROW}</span></button>
+        <button data-act="tab" data-v="journal" style="${QL_STYLE}">Journal <span aria-hidden="true" style="font-size:1.4em">${ARROW}</span></button>
+        <button data-act="tab" data-v="fuel" style="${QL_STYLE}">Nutrition <span aria-hidden="true" style="font-size:1.4em">${ARROW}</span></button>
       </div></div>
   </div></div></section>`;
 }
