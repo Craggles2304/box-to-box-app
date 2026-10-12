@@ -3503,6 +3503,13 @@ document.addEventListener("click",async e=>{
   else if(a==="gate-player"){gateMode="player";render()}
   else if(a==="gate-back"){gateMode=null;gateMsg="";render()}
   else if(a==="gate-signout"){sessSet(null);ACCT=null;gateMode=null;render()}
+  else if(a==="start"&&sessGet()&&ACCT&&S.nick){
+    try{
+      const r=await fetch(API_BASE+"/api/players",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+sessGet()},body:JSON.stringify({nickname:S.nick,age:S.age})});
+      if(r.ok){await loadAccount();toast(`${S.nick} is saved to your account`)}
+      else{const j=await r.json().catch(()=>({}));toast(j.error==="too_many_players"?"This account already has 5 players":"Couldn't save to your account. It's saved on this device.")}
+    }catch(err){toast("Couldn't reach the server. It's saved on this device.")}
+  }
   else if(a==="gate-send"){
     const em=(document.getElementById("gemail")?.value||"").trim();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){gateMsg="Enter a valid email address.";render();return}
