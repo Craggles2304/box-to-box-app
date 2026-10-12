@@ -1,0 +1,19 @@
+name = "box-to-box-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# Database created in the UK region: box-to-box-accounts
+[[d1_databases]]
+binding = "DB"
+database_name = "box-to-box-accounts"
+database_id = "c1c6788f-1f10-4367-9c71-e4270df3239c"
+
+# Non-secret settings. Replace the placeholders before deploying.
+[vars]
+APP_ORIGIN = "https://REPLACE-WITH-APP-ORIGIN"   # where the app is hosted, e.g. https://boxtoboxacademy.github.io
+APP_URL = "https://REPLACE-WITH-APP-ORIGIN/"     # where players and parents land after sign-in
+API_BASE = "https://REPLACE-WITH-WORKER-URL"     # the workers.dev address (or your custom domain) once deployed
+MAIL_FROM = "Box to Box <REPLACE@YOUR-DOMAIN>"   # sender for sign-in emails, must be a verified domain
+
+# Secrets are NOT stored here. Set them with:
+#   npx wrangler secret put RESEND_API_KEY
