@@ -1722,7 +1722,7 @@ function drillCard(d,col){
     <div class="block"><span class="eyebrow">Coaching points</span><ul class="need">${d.points.map(s=>`<li>${esc(s)}</li>`).join("")}</ul></div>
     ${d.safety?`<div class="notice">${esc(d.safety)}</div>`:""}
     <details class="ex"><summary>See every level</summary><div class="lvlist">${LVK.map(x=>`<p><b>${STAGES[x].name}</b> ${esc(d.lv[x])}</p>`).join("")}</div></details>
-    <div class="row"><button class="btn ${done?"ghost":""}" data-act="drill" data-id="${d.id}">${done?"Done today":"Mark done · +10 XP"}</button></div>
+    <div class="row"><button class="btn ${done?"ghost":""}" data-act="${BM[d.id]&&!done?"needscore":"drill"}" data-id="${d.id}">${done?"Done today":(BM[d.id]?"Log your score to finish · +10 XP":"Mark done · +10 XP")}</button></div>
    </div></details>`;
 }
 function trainTabs(){return `<div class="wrap"><div class="utabs" role="group" aria-label="Training type" style="margin-top:26px">${[["prog","Programme"],["basics","Basic drills"],["pos","Position drills"]].map(([k,n])=>`<button data-act="ttab" data-v="${k}" aria-pressed="${trainTab===k}">${n}</button>`).join("")}</div></div>`}
@@ -1789,6 +1789,7 @@ document.addEventListener("click",e=>{
   if(a==="ttab"){trainTab=b.dataset.v;soft()}
   else if(a==="pos"){posView=b.dataset.v;soft()}
   else if(a==="setpos"){S.pos=b.dataset.v;posView=null;save();toast("Position saved");soft()}
+  else if(a==="needscore"){const i=document.getElementById("sc-"+b.dataset.id);if(i){const dt=i.closest("details");if(dt)dt.open=true;i.focus();i.scrollIntoView({behavior:"smooth",block:"center"})}toast("Enter your score to record your progress")}
   else if(a==="drill"){drillDone(b.dataset.id)}
   else if(a==="savetest"){
     const id=b.dataset.id,inp=document.getElementById("t-"+id),v=parseFloat(inp&&inp.value);
@@ -1865,7 +1866,7 @@ function drillCard(d,col){
      ${L.length>1?`<div class="trend">${spark(d.id)}<span class="small">Your last ${Math.min(8,L.length)} scores</span></div>`:""}
     </div>
     <details class="ex"><summary>See every level's session</summary><div class="lvlist">${LVK.map(x=>`<p><b>${STAGES[x].name} · target ${fmtS(b,b.t[x])}</b> ${esc(d.lv[x])}</p>`).join("")}</div></details>
-    <div class="row"><button class="btn ghost small" data-act="drill" data-id="${d.id}">${done?"Done today":"Done without a score · +10 XP"}</button></div>
+    <div class="row"><button class="btn ghost small" data-act="${BM[d.id]?"needscore":"drill"}" data-id="${d.id}">${done?"Done today":(BM[d.id]?"Log your score to finish · +10 XP":"Done without a score · +10 XP")}</button></div>
    </div></details>`;
 }
 function logScore(id){
@@ -3148,7 +3149,7 @@ function drillCard(d,col){
      ${L.length>1?`<div class="trend">${spark(d.id)}<span class="small">Your last ${Math.min(8,L.length)} scores</span></div>`:""}
     </div>
     <details class="ex"><summary>See every level's session</summary><div class="lvlist">${LVK.map(x=>`<p><b>${STAGES[x].name} · target ${fmtS(b,b.t[x])}</b> ${esc(d.lv[x])}</p>`).join("")}</div></details>
-    <div class="row"><button class="btn ghost small" data-act="drill" data-id="${d.id}">${done?"Done today":"Done without a score · +10 XP"}</button></div>
+    <div class="row"><button class="btn ghost small" data-act="${BM[d.id]?"needscore":"drill"}" data-id="${d.id}">${done?"Done today":(BM[d.id]?"Log your score to finish · +10 XP":"Done without a score · +10 XP")}</button></div>
    </div></details>`;
 }
 
