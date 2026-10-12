@@ -3545,7 +3545,7 @@ document.addEventListener("click",async e=>{
   else if(a==="start"&&sessGet()&&ACCT&&S.nick){
     try{
       const r=await fetch(API_BASE+"/api/players",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+sessGet()},body:JSON.stringify({nickname:S.nick,age:S.age})});
-      if(r.ok){await loadAccount();toast(`${S.nick} is saved to your account`)}
+      if(r.ok){const j=await r.json().catch(()=>({}));if(j.id)setPlayerId(j.id);await loadAccount();toast(`${S.nick} is saved to your account`);pushState()}
       else{const j=await r.json().catch(()=>({}));toast(j.error==="too_many_players"?"This account already has 5 players":"Couldn't save to your account. It's saved on this device.")}
     }catch(err){toast("Couldn't reach the server. It's saved on this device.")}
   }
@@ -3561,7 +3561,7 @@ document.addEventListener("click",async e=>{
     try{
       const r=await fetch(API_BASE+"/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,password:pw})});
       const j=await r.json().catch(()=>({}));
-      if(r.ok&&j.token){sessSet(j.token);await loadAccount();gateMsg="";gateMode=null;render()}
+      if(r.ok&&j.token){sessSet(j.token);gateMsg="";gateMode=null;await afterSignIn()}
       else if(j.error==="exists"){gateMsg="An account with this email already exists. Go back and sign in instead.";render()}
       else{gateMsg="Something went wrong. Please try again.";render()}
     }catch(err){gateMsg="Couldn't reach the server. Check your connection and try again.";render()}
@@ -3573,7 +3573,7 @@ document.addEventListener("click",async e=>{
     try{
       const r=await fetch(API_BASE+"/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,password:pw})});
       const j=await r.json().catch(()=>({}));
-      if(r.ok&&j.token){sessSet(j.token);await loadAccount();gateMsg="";gateMode=null;render()}
+      if(r.ok&&j.token){sessSet(j.token);gateMsg="";gateMode=null;await afterSignIn()}
       else{gateMsg=j.error==="wrong_details"?"That email or password isn't right. Try again, or email yourself a link below.":"Something went wrong. Please try again.";render()}
     }catch(err){gateMsg="Couldn't reach the sign-in service. Check your connection and try again.";render()}
   }
@@ -3599,7 +3599,43 @@ document.addEventListener("click",async e=>{
     render();
   }
 });
-captureSession();booted=true;render();loadAccount().then(()=>{if(!S.nick)render()});
+
+/* ---- keep a child's progress on their account (signed-in parents) ---- */
+const PLAYER_KEY="b2b.playerId";
+function playerId(){try{return localStorage.getItem(PLAYER_KEY)}catch(e){return null}}
+function setPlayerId(id){try{if(id)localStorage.setItem(PLAYER_KEY,id)}catch(e){}}
+let pushTimer=null;
+async function loadAfterBoot(){await afterSignIn()}
+async function pushState(){
+  const t=sessGet(),id=playerId();
+  if(!t||!id||!S.nick)return;
+  try{const r=await fetch(API_BASE+"/api/players/"+id+"/state",{method:"PUT",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify({data:S})});
+    if(r.status===401){sessSet(null);ACCT=null}}catch(e){}
+}
+function schedulePush(){if(!S.nick||!sessGet()||!playerId())return;clearTimeout(pushTimer);pushTimer=setTimeout(pushState,1200)}
+async function pullState(){
+  const t=sessGet(),id=playerId();
+  if(!t||!id)return;
+  try{
+    const r=await fetch(API_BASE+"/api/players/"+id+"/state",{headers:{Authorization:"Bearer "+t}});
+    if(!r.ok)return;
+    const j=await r.json();
+    if(j.data){S=Object.assign(fresh(),j.data)}
+    else{const p=(ACCT&&ACCT.players||[]).find(x=>x.id===id);if(p){S=Object.assign(fresh(),{nick:p.nickname,age:p.age,stage:p.age<=9?"g":"d",kit:1})}else return}
+    ensure();_saveLocal();
+  }catch(e){}
+}
+async function afterSignIn(){
+  await loadAccount();
+  if(ACCT&&ACCT.players&&ACCT.players.length){
+    if(!playerId())setPlayerId(ACCT.players[0].id);
+    if(!S.nick)await pullState();
+  }
+  render();
+}
+const _saveLocal=save;
+save=function(){_saveLocal();schedulePush()};
+captureSession();booted=true;render();loadAfterBoot();
 </script>
 </body>
 </html>

@@ -248,6 +248,38 @@ async function handleRegister(env, request) {
   return json(env, { token }, 201);
 }
 
+
+// ---- player progress: one saved copy per child, only for the parent who owns that child ----
+const STATE_MAX_BYTES = 500000;
+async function ownedPlayer(env, parentId, playerId) {
+  return env.DB.prepare(`SELECT id FROM players WHERE id = ? AND parent_id = ?`).bind(playerId, parentId).first();
+}
+async function handleGetState(env, request, playerId) {
+  const parent = await currentParent(env, request);
+  if (!parent) return json(env, { error: "not_signed_in" }, 401);
+  if (!(await ownedPlayer(env, parent.id, playerId))) return json(env, { error: "not_found" }, 404);
+  const row = await env.DB.prepare(`SELECT data, updated_at FROM player_state WHERE player_id = ?`).bind(playerId).first();
+  return json(env, { data: row ? JSON.parse(row.data) : null, updatedAt: row ? row.updated_at : null });
+}
+async function handlePutState(env, request, playerId) {
+  const parent = await currentParent(env, request);
+  if (!parent) return json(env, { error: "not_signed_in" }, 401);
+  if (!(await ownedPlayer(env, parent.id, playerId))) return json(env, { error: "not_found" }, 404);
+  let body;
+  try { body = await request.json(); } catch { return json(env, { error: "bad_json" }, 400); }
+  if (!body || typeof body.data !== "object" || body.data === null || Array.isArray(body.data)) {
+    return json(env, { error: "bad_data" }, 400);
+  }
+  const text = JSON.stringify(body.data);
+  if (text.length > STATE_MAX_BYTES) return json(env, { error: "too_large" }, 413);
+  const now = nowIso();
+  await env.DB.prepare(
+    `INSERT INTO player_state (player_id, data, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT(player_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`
+  ).bind(playerId, text, now).run();
+  return json(env, { ok: true, updatedAt: now });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -262,6 +294,9 @@ export default {
       if (p === "/api/me" && request.method === "GET") return handleMe(env, request);
       if (p === "/api/auth/login" && request.method === "POST") return handleLogin(env, request);
       if (p === "/api/auth/register" && request.method === "POST") return handleRegister(env, request);
+      const st = p.match(/^\/api\/players\/([A-Za-z0-9]{1,64})\/state$/);
+      if (st && request.method === "GET") return handleGetState(env, request, st[1]);
+      if (st && request.method === "PUT") return handlePutState(env, request, st[1]);
       if (p === "/api/auth/set-password" && request.method === "POST") return handleSetPassword(env, request);
       if (p === "/api/players" && request.method === "POST") return handleAddPlayer(env, request);
       return json(env, { error: "not_found" }, 404);
