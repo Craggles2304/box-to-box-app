@@ -3515,7 +3515,8 @@ function viewGate(){
       <label class="small" for="gpw">Password</label>
       <input id="gpw" type="password" autocomplete="current-password" style="max-width:360px;padding:12px;font:inherit">
       <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-login">Sign in ${ARROW}</button><button class="more" data-act="gate-back">Back</button></div>
-      <p class="small"><button class="more" data-act="gate-send">No password yet, or forgotten it? Email me a sign-in link instead</button></p>
+      <div class="stack" style="gap:8px"><p class="small">New here, or forgotten your password? We'll email you a link. Tap it to create your account, or to sign in if you already have one.</p>
+      <div><button class="more" data-act="gate-send">Create an account ${ARROW}</button></div></div>
       ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
   }else{
     inner=`<p class="lead">Parents sign in with an email link. Players start their profile here, then train from the app.</p>
