@@ -254,12 +254,13 @@ textarea{min-height:84px;resize:vertical}
 
 /* bottom nav (phones) */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(6,6,6,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px))}
-nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:2px}
+nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
 nav.tabs button{letter-spacing:.04em!important;font-size:.52rem!important}
 nav.tabs button{background:none;border:0;padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.58rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 nav.tabs button svg{width:23px;height:23px}
 nav.tabs button[aria-current="page"]{color:var(--volt)}
-nav.tabs{display:none!important}#toast{bottom:32px!important}
+#toast{bottom:96px!important}
+main{padding-bottom:110px}
 .subnav{display:flex;gap:22px;overflow-x:auto;padding:0 16px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:112px;z-index:20;scrollbar-width:none}
 .subnav button{background:none;border:0;padding:14px 0;font-weight:800;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);position:relative;white-space:nowrap}
 .subnav button[aria-current="page"]{color:var(--ink)}
@@ -1410,15 +1411,34 @@ function viewOnboard(){
 function cleanNick(s){return String(s||"").replace(/[^\p{L}\p{N} ._-]/gu,"").replace(/\s+/g," ").trim().slice(0,16)}
 
 /* ---------- render + events ---------- */
+const TABS=[["home","Today",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>'],
+ ["challenges","Train",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l5 15H7z"/><path d="M4 21h16M9.5 11h5"/></svg>'],
+ ["me","Progress",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'],
+ ["parents","Parents",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>']];
+const TAB_OF={home:"home",path:"challenges",journal:"me",fuel:"challenges",challenges:"challenges",play:"challenges",mind:"challenges",done:"home",me:"me",parents:"parents"};
 function render(){
   const root=document.getElementById("app"),nav=document.getElementById("tabs");
   if(!S.nick){root.innerHTML=header()+`<main>${gateMode==="player"?viewOnboard():viewGate()}</main>`;nav.hidden=true;return}
-  rollWeek();nav.hidden=true;
-  const body={home:viewHomeP,challenges:viewList,play:viewPlay,done:viewDone,path:viewPath,board:viewBoard,me:viewMe,coach:viewCoach,place:viewPlace,mind:viewMind,parents:viewParents,fuel:viewFuel,privacy:viewPrivacy,journal:viewDiary}[view]||viewHomeP;
-  const sub=["home","path","challenges","play","mind","journal","fuel","me"].includes(view)?subNav():"";
-  root.innerHTML=header()+`${sub}<main>${body()}</main>`;
-  const cur=(view==="play"||view==="mind")?"challenges":view==="done"?"home":view;
-  nav.querySelectorAll("button").forEach(b=>b.dataset.v===cur?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  rollWeek();
+  const body={home:viewToday,challenges:viewList,play:viewPlay,done:viewDone,path:viewPath,board:viewBoard,me:viewMe,coach:viewCoach,place:viewPlace,mind:viewMind,parents:viewParents,fuel:viewFuel,privacy:viewPrivacy,journal:viewDiary}[view]||viewToday;
+  const cur=TAB_OF[view]||"home";
+  root.innerHTML=header().replace(/<nav class="topnav"[\s\S]*?<\/nav>/,"")+`<main>${body()}</main>`;
+  nav.innerHTML=`<div class="in">${TABS.map(([v,label,icon])=>`<button data-act="tab" data-v="${v}" ${cur===v?'aria-current="page"':""}>${icon}${label}</button>`).join("")}</div>`;
+  nav.hidden=false;
+}
+function viewToday(){
+  const kid=band()==="kid"||band()==="junior";
+  return `<section class="hero" style="min-height:0;padding-bottom:8px"><div class="wrap"><div class="stack" style="gap:18px">
+    <span class="eyebrow">${kid?"Your mission today":"Today"}</span>
+    <h1>${kid?`Let's go, <em class="v">${esc(S.nick)}!</em>`:`Ready, <em class="v">${esc(S.nick)}.</em>`}</h1>
+    ${todayBlock()}
+    <div class="stack" style="gap:10px"><span class="eyebrow">Quick links</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+        <button class="more" data-act="tab" data-v="path">Level map ${ARROW}</button>
+        <button class="more" data-act="tab" data-v="journal">Journal ${ARROW}</button>
+        <button class="more" data-act="tab" data-v="fuel">Nutrition ${ARROW}</button>
+      </div></div>
+  </div></div></section>`;
 }
 function soft(){const y=window.scrollY;render();const m=document.querySelector("main");if(m)m.style.animation="none";window.scrollTo(0,y)}
 document.addEventListener("click",e=>{
