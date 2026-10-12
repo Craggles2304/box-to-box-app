@@ -1392,6 +1392,7 @@ function viewOnboard(){
       <div class="sstep"><span class="k">02</span><div><h3>Your age</h3><label class="field" for="age"><span style="position:absolute;left:-9999px">Age</span><select id="age">${ageOpts(ob.age)}</select></label></div></div>
       <div class="sstep"><span class="k">03</span><div><h3>Your level</h3>${levelPick(ob.age,ob.level,"lvl")}<p class="hint">${ob.age<=9?"":"Pick the level you play at now. It's about how you play, not how old you are."}</p></div></div>
       <div class="sstep"><span class="k">04</span><div><h3>Your colourway</h3>${swatches(ob.kit,"kit")}</div></div>
+      <div class="sstep"><span class="k">05</span><div><h3>Parent or guardian</h3><label class="consent" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer"><input type="checkbox" id="consent" style="margin-top:4px;accent-color:var(--volt);width:18px;height:18px;flex:none"><span class="small">I am the parent or guardian of this player (or I am 18 or over). I have read the <button type="button" class="more" data-act="tab" data-v="privacy" style="font-size:.7rem">Privacy and terms</button> and agree that progress, scores, journal entries and any clips the player chooses to submit can be stored for the programme.</span></label><p class="hint">Under 18s need a parent or guardian to agree. You can ask for the information to be deleted at any time.</p></div></div>
       <div style="padding-top:24px"><button class="btn" data-act="start" style="width:100%">Kick off ${ARROW}</button></div>
      </div>
     </div>
@@ -1406,7 +1407,7 @@ function render(){
   const root=document.getElementById("app"),nav=document.getElementById("tabs");
   if(!S.nick){root.innerHTML=header()+`<main>${viewOnboard()}</main>`;nav.hidden=true;return}
   rollWeek();nav.hidden=true;
-  const body={home:viewHomeP,challenges:viewList,play:viewPlay,done:viewDone,path:viewPath,board:viewBoard,me:viewMe,coach:viewCoach,place:viewPlace,mind:viewMind,parents:viewParents,fuel:viewFuel,journal:viewDiary}[view]||viewHomeP;
+  const body={home:viewHomeP,challenges:viewList,play:viewPlay,done:viewDone,path:viewPath,board:viewBoard,me:viewMe,coach:viewCoach,place:viewPlace,mind:viewMind,parents:viewParents,fuel:viewFuel,privacy:viewPrivacy,journal:viewDiary}[view]||viewHomeP;
   const sub=["home","path","challenges","play","mind","journal","fuel","me"].includes(view)?subNav():"";
   root.innerHTML=header()+`${sub}<main>${body()}</main>`;
   const cur=(view==="play"||view==="mind")?"challenges":view==="done"?"home":view;
@@ -1434,6 +1435,8 @@ document.addEventListener("click",e=>{
   else if(a==="start"){
     const n=cleanNick(document.getElementById("nick").value),age=+document.getElementById("age").value;
     if(!n){toast("Pick a nickname first");document.getElementById("nick").focus();return}
+    if(!document.getElementById("consent")?.checked){toast("A parent or guardian needs to tick the consent box first");document.getElementById("consent")?.focus();return}
+    S.consent={at:dayKey(),v:"draft-1"};
     Object.assign(S,{nick:n,age,stage:age<=9?"g":(ob.level||"d"),kit:ob.kit});filterS=S.stage;save();view="home";render();window.scrollTo(0,0);sync();toast(`Welcome, ${n}`);
   }
   else if(a==="edit"){editOpen=!editOpen;delete S._ageDraft;delete S._lvlDraft;soft()}
@@ -3040,6 +3043,20 @@ function viewFuel(){
      <p class="small" style="margin-top:16px">If eating is a constant struggle, or you're worried about your child's weight or food, speak to a GP or dietitian. Allergies and special diets should always be checked with a doctor first.</p></section></div>`;
 }
 function viewHomeP(){const h=viewHome();const i=h.indexOf('<section class="sec">');const ban=`<section class="sec" style="padding-top:20px"><div class="sechd" style="margin-bottom:0"><div class="stack" style="gap:8px"><span class="eyebrow">For parents and guardians</span><h2>Parents &amp; <em class="v">Fuel</em></h2><p class="muted small" style="max-width:60ch">See how your child is progressing, what they're working on at home, and the nutrition guide.</p></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn small" data-act="tab" data-v="parents">Parents page ${ARROW}</button><button class="more" data-act="tab" data-v="fuel">Fuel ${ARROW}</button><button class="more" data-act="tab" data-v="path">Level map ${ARROW}</button></div></div></section>`;return i<0?h+ban:h.slice(0,i)+ban+h.slice(i)}
+function viewPrivacy(){
+  return `<div class="wrap"><section class="sec" style="padding-top:20px"><div class="sechd"><div class="stack"><span class="eyebrow">Privacy and terms</span><h2>Your <em class="v">data.</em></h2></div></div>
+  <div class="notice"><b>DRAFT, NOT YET APPROVED.</b> This text is a starting point and must be reviewed by a qualified solicitor and the club's safeguarding lead before use.</div>
+  <div class="stack" style="gap:18px;max-width:70ch">
+   <div><h3>What we store</h3><p class="muted">Nickname, age band, level, kit colour, training progress, benchmark scores, journal entries, and any clip a player chooses to submit.</p></div>
+   <div><h3>Why we store it</h3><p class="muted">To track progress through the programme, show the player's own results, and let the coach review submissions. Nothing is sold or used for advertising.</p></div>
+   <div><h3>Who can see it</h3><p class="muted">The player, their parent or guardian, and the club's coaches. The public table shows only nicknames, and only for players who opt in to the Showcase.</p></div>
+   <div><h3>Children and consent</h3><p class="muted">A parent or guardian must agree when the player signs up. Clips and Showcase sharing stay off unless a parent or guardian turns them on.</p></div>
+   <div><h3>Your rights</h3><p class="muted">You can ask to see, correct or delete a player's information at any time. Contact the club to do this.</p></div>
+   <div><h3>Contact</h3><p class="muted">Box to Box Football Academy. Contact details to be added before launch.</p></div>
+  </div>
+  <div style="margin-top:24px"><button class="btn ghost small" data-act="tab" data-v="home">Back to your journey</button></div>
+  </section></div>`;
+}
 function viewParents(){
   const nk=esc(S.nick||"your child"),C=S.nick?myCorners():null,W=WEEK[S.stage],days=weekDays(),dn=days.filter(trainedOn).length,A=fivecAvg(5),R=S.placement?placement(myParts()):null;
   const acc=(id,title,body)=>`<details class="drill pacc" ${parentOpen===id?"open":""}><summary><h3>${title}</h3><span class="plus" aria-hidden="true">+</span></summary><div class="dbody">${body}</div></details>`;
