@@ -134,8 +134,9 @@ async function handleLogout(env, request) {
 async function handleMe(env, request) {
   const parent = await currentParent(env, request);
   if (!parent) return json(env, { signedIn: false }, 401);
+  await ensureLoginCodes(env, parent.id);
   const players = await env.DB.prepare(
-    `SELECT id, nickname, age FROM players WHERE parent_id = ? ORDER BY created_at`
+    `SELECT id, nickname, age, login_code, (pin_hash IS NOT NULL) AS has_pin FROM players WHERE parent_id = ? ORDER BY created_at`
   ).bind(parent.id).all();
   const ent = await env.DB.prepare(
     `SELECT product, status, current_period_end FROM entitlements WHERE parent_id = ?`
@@ -163,10 +164,11 @@ async function handleAddPlayer(env, request) {
   const count = await env.DB.prepare(`SELECT COUNT(*) AS n FROM players WHERE parent_id = ?`).bind(parent.id).first();
   if (count && count.n >= MAX_PLAYERS) return json(env, { error: "too_many_players" }, 400);
   const id = uid();
+  const loginCode = await makeLoginCode(env, nickname);
   await env.DB.prepare(
-    `INSERT INTO players (id, parent_id, nickname, age, created_at) VALUES (?, ?, ?, ?, ?)`
-  ).bind(id, parent.id, nickname, age, nowIso()).run();
-  return json(env, { id, nickname, age }, 201);
+    `INSERT INTO players (id, parent_id, nickname, age, created_at, login_code) VALUES (?, ?, ?, ?, ?, ?)`
+  ).bind(id, parent.id, nickname, age, nowIso(), loginCode).run();
+  return json(env, { id, nickname, age, loginCode }, 201);
 }
 
 
@@ -249,22 +251,67 @@ async function handleRegister(env, request) {
 }
 
 
-// ---- player progress: one saved copy per child, only for the parent who owns that child ----
+// ---- children: sign-in codes, PINs and player sessions ----
 const STATE_MAX_BYTES = 500000;
-async function ownedPlayer(env, parentId, playerId) {
-  return env.DB.prepare(`SELECT id FROM players WHERE id = ? AND parent_id = ?`).bind(playerId, parentId).first();
+const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O, 1/I/L
+const PIN_MAX_FAILS = 5;
+const PIN_LOCK_MINUTES = 10;
+
+function randomChars(n, alphabet) {
+  const a = new Uint8Array(n);
+  crypto.getRandomValues(a);
+  return [...a].map((x) => alphabet[x % alphabet.length]).join("");
 }
+async function makeLoginCode(env, nickname) {
+  const prefix = String(nickname || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4) || "KID";
+  for (let i = 0; i < 6; i++) {
+    const code = `${prefix}-${randomChars(4, CODE_ALPHABET)}`;
+    const taken = await env.DB.prepare(`SELECT id FROM players WHERE login_code = ?`).bind(code).first();
+    if (!taken) return code;
+  }
+  return `${prefix}-${randomChars(8, CODE_ALPHABET)}`;
+}
+// Gives every child of this parent a sign-in code if they don't have one yet.
+async function ensureLoginCodes(env, parentId) {
+  const rows = await env.DB.prepare(`SELECT id, nickname FROM players WHERE parent_id = ? AND login_code IS NULL`).bind(parentId).all();
+  for (const r of rows.results || []) {
+    const code = await makeLoginCode(env, r.nickname);
+    await env.DB.prepare(`UPDATE players SET login_code = ? WHERE id = ?`).bind(code, r.id).run();
+  }
+}
+async function newPlayerSession(env, playerId) {
+  const token = randomToken();
+  await env.DB.prepare(
+    `INSERT INTO player_sessions (token_hash, player_id, expires_at, created_at) VALUES (?, ?, ?, ?)`
+  ).bind(await sha256(token), playerId, inDays(SESSION_DAYS), nowIso()).run();
+  return token;
+}
+
+// A request may act on a child if it carries the parent's session for that child, or the child's own session.
+async function canAccessPlayer(env, request, playerId) {
+  const auth = request.headers.get("Authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : getCookie(request, "b2b_session");
+  if (!token) return false;
+  const hash = await sha256(token);
+  const parentRow = await env.DB.prepare(
+    `SELECT p.id FROM sessions s JOIN parents p ON p.id = s.parent_id
+     JOIN players pl ON pl.parent_id = p.id
+     WHERE s.token_hash = ? AND s.expires_at > ? AND pl.id = ?`
+  ).bind(hash, nowIso(), playerId).first();
+  if (parentRow) return true;
+  const childRow = await env.DB.prepare(
+    `SELECT player_id FROM player_sessions WHERE token_hash = ? AND player_id = ? AND expires_at > ?`
+  ).bind(hash, playerId, nowIso()).first();
+  return !!childRow;
+}
+
 async function handleGetState(env, request, playerId) {
-  const parent = await currentParent(env, request);
-  if (!parent) return json(env, { error: "not_signed_in" }, 401);
-  if (!(await ownedPlayer(env, parent.id, playerId))) return json(env, { error: "not_found" }, 404);
+  if (!(await canAccessPlayer(env, request, playerId))) return json(env, { error: "not_found" }, 404);
   const row = await env.DB.prepare(`SELECT data, updated_at FROM player_state WHERE player_id = ?`).bind(playerId).first();
   return json(env, { data: row ? JSON.parse(row.data) : null, updatedAt: row ? row.updated_at : null });
 }
 async function handlePutState(env, request, playerId) {
-  const parent = await currentParent(env, request);
-  if (!parent) return json(env, { error: "not_signed_in" }, 401);
-  if (!(await ownedPlayer(env, parent.id, playerId))) return json(env, { error: "not_found" }, 404);
+  if (!(await canAccessPlayer(env, request, playerId))) return json(env, { error: "not_found" }, 404);
   let body;
   try { body = await request.json(); } catch { return json(env, { error: "bad_json" }, 400); }
   if (!body || typeof body.data !== "object" || body.data === null || Array.isArray(body.data)) {
@@ -278,6 +325,54 @@ async function handlePutState(env, request, playerId) {
      ON CONFLICT(player_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`
   ).bind(playerId, text, now).run();
   return json(env, { ok: true, updatedAt: now });
+}
+
+// Parent sets or resets a child's 4-digit PIN.
+async function handleSetPin(env, request, playerId) {
+  const parent = await currentParent(env, request);
+  if (!parent) return json(env, { error: "not_signed_in" }, 401);
+  if (!(await ownedPlayer(env, parent.id, playerId))) return json(env, { error: "not_found" }, 404);
+  let body;
+  try { body = await request.json(); } catch { return json(env, { error: "bad_json" }, 400); }
+  const pin = String(body.pin || "");
+  if (!/^\d{4}$/.test(pin)) return json(env, { error: "pin_format" }, 400);
+  const salt = randomToken().slice(0, 32);
+  const hash = await hashPassword(pin, salt);
+  await env.DB.prepare(
+    `UPDATE players SET pin_hash = ?, pin_salt = ?, pin_fails = 0, pin_locked_until = NULL WHERE id = ?`
+  ).bind(hash, salt, playerId).run();
+  return json(env, { ok: true });
+}
+async function ownedPlayer(env, parentId, playerId) {
+  return env.DB.prepare(`SELECT id FROM players WHERE id = ? AND parent_id = ?`).bind(playerId, parentId).first();
+}
+
+// Child signs in with their code and PIN.
+async function handlePlayerLogin(env, request) {
+  let body;
+  try { body = await request.json(); } catch { return json(env, { error: "bad_json" }, 400); }
+  const code = String(body.code || "").trim().toUpperCase();
+  const pin = String(body.pin || "");
+  if (!code || !/^\d{4}$/.test(pin)) return json(env, { error: "wrong_details" }, 401);
+  const row = await env.DB.prepare(
+    `SELECT id, nickname, age, pin_hash, pin_salt, pin_fails, pin_locked_until FROM players WHERE login_code = ?`
+  ).bind(code).first();
+  if (!row || !row.pin_hash) return json(env, { error: "wrong_details" }, 401);
+  if (row.pin_locked_until && row.pin_locked_until > nowIso()) {
+    return json(env, { error: "locked", until: row.pin_locked_until }, 429);
+  }
+  const hash = await hashPassword(pin, row.pin_salt);
+  if (!constantTimeEqual(hash, row.pin_hash)) {
+    const fails = (row.pin_fails || 0) + 1;
+    const lock = fails >= PIN_MAX_FAILS ? inMinutes(PIN_LOCK_MINUTES) : null;
+    await env.DB.prepare(
+      `UPDATE players SET pin_fails = ?, pin_locked_until = ? WHERE id = ?`
+    ).bind(lock ? 0 : fails, lock, row.id).run();
+    return json(env, { error: "wrong_details" }, 401);
+  }
+  await env.DB.prepare(`UPDATE players SET pin_fails = 0, pin_locked_until = NULL WHERE id = ?`).bind(row.id).run();
+  const token = await newPlayerSession(env, row.id);
+  return json(env, { token, playerId: row.id, nickname: row.nickname, age: row.age });
 }
 
 export default {
@@ -297,6 +392,9 @@ export default {
       const st = p.match(/^\/api\/players\/([A-Za-z0-9]{1,64})\/state$/);
       if (st && request.method === "GET") return handleGetState(env, request, st[1]);
       if (st && request.method === "PUT") return handlePutState(env, request, st[1]);
+      const pn = p.match(/^\/api\/players\/([A-Za-z0-9]{1,64})\/pin$/);
+      if (pn && request.method === "POST") return handleSetPin(env, request, pn[1]);
+      if (p === "/api/player/login" && request.method === "POST") return handlePlayerLogin(env, request);
       if (p === "/api/auth/set-password" && request.method === "POST") return handleSetPassword(env, request);
       if (p === "/api/players" && request.method === "POST") return handleAddPlayer(env, request);
       return json(env, { error: "not_found" }, 404);

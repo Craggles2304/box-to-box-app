@@ -1416,11 +1416,12 @@ const TABS=[["home","Today",'<svg viewBox="0 0 24 24" fill="none" stroke="curren
  ["me","Progress",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'],
  ["parents","Parents",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>']];
 const TAB_OF={home:"home",path:"challenges",journal:"me",fuel:"challenges",challenges:"challenges",play:"challenges",mind:"challenges",done:"home",me:"me",parents:"parents"};
+let gateOpen=false;
 function render(){
   const root=document.getElementById("app"),nav=document.getElementById("tabs");
-  if(!S.nick){root.innerHTML=header()+`<main>${gateMode==="player"?viewOnboard():viewGate()}</main>`;nav.hidden=true;return}
+  if(!S.nick||gateOpen){root.innerHTML=header()+`<main>${gateMode==="player"?viewOnboard():viewGate()}</main>`;nav.hidden=true;return}
   rollWeek();
-  const body={home:viewToday,challenges:viewList,play:viewPlay,done:viewDone,path:viewPath,board:viewBoard,me:viewMe,coach:viewCoach,place:viewPlace,mind:viewMind,parents:viewParents,fuel:viewFuel,privacy:viewPrivacy,journal:viewDiary}[view]||viewToday;
+  const body={home:viewToday,challenges:viewList,play:viewPlay,done:viewDone,path:viewPath,board:viewBoard,me:viewMe,coach:viewCoach,place:viewPlace,mind:viewMind,parents:viewParentsAcct,fuel:viewFuel,privacy:viewPrivacy,journal:viewDiary}[view]||viewToday;
   const cur=TAB_OF[view]||"home";
   root.innerHTML=header().replace(/<nav class="topnav"[\s\S]*?<\/nav>/,"")+`<main>${body()}</main>`;
   nav.innerHTML=`<div class="in">${TABS.map(([v,label,icon])=>`<button data-act="tab" data-v="${v}" ${cur===v?'aria-current="page"':""}>${icon}${label}</button>`).join("")}</div>`;
@@ -3084,6 +3085,19 @@ function viewPrivacy(){
   <div style="margin-top:24px"><button class="btn ghost small" data-act="tab" data-v="home">Back to your journey</button></div>
   </section></div>`;
 }
+function viewParentsAcct(){
+  let box;
+  if(!ACCT){
+    box=`<section class="sec"><div class="stack" style="gap:12px"><span class="eyebrow">For parents and guardians</span><h2>Sign in to manage your children</h2><p class="muted">Sign in to see each child's sign-in code and set their PIN.</p><div><button class="btn" data-act="gate-open">Parent sign-in ${ARROW}</button></div></div></section>`;
+  }else{
+    const cards=(ACCT.players||[]).map(p=>`<div class="stack" style="gap:10px;padding:16px;border:1px solid var(--line)">
+        <strong>${esc(p.nickname)}</strong><span class="small muted">Age ${esc(String(p.age))} · ${p.has_pin?"PIN set":"No PIN yet"}</span>
+        <span class="small">Sign-in code</span><span style="font-family:var(--f-display);font-size:1.6rem;letter-spacing:.12em">${esc(p.login_code||"…")}</span>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input id="pin-${esc(p.id)}" inputmode="numeric" maxlength="4" type="password" placeholder="4-number PIN" style="max-width:160px;padding:12px;font:inherit;letter-spacing:.3em"><button class="btn" data-act="pin-save" data-id="${esc(p.id)}">${p.has_pin?"Change PIN":"Save PIN"}</button></div></div>`).join("")||`<p class="muted">No children on your account yet.</p>`;
+    box=`<section class="sec"><div class="stack" style="gap:14px"><span class="eyebrow">Signed in as ${esc(ACCT.parent.email)}</span><h2>Sign-in for your children</h2><p class="muted">Your child signs in with the code and PIN below, from the front screen.</p>${cards}<div><button class="more" data-act="gate-signout">Sign out as parent</button></div></div></section>`;
+  }
+  return box+viewParents();
+}
 function viewParents(){
   const nk=esc(S.nick||"your child"),C=S.nick?myCorners():null,W=WEEK[S.stage],days=weekDays(),dn=days.filter(trainedOn).length,A=fivecAvg(5),R=S.placement?placement(myParts()):null;
   const acc=(id,title,body)=>`<details class="drill pacc" ${parentOpen===id?"open":""}><summary><h3>${title}</h3><span class="plus" aria-hidden="true">+</span></summary><div class="dbody">${body}</div></details>`;
@@ -3497,7 +3511,9 @@ let gateMode=null, gateMsg="", ACCT=null;
 function sessGet(){try{return localStorage.getItem("b2b.session")}catch(e){return null}}
 function sessSet(t){try{if(t)localStorage.setItem("b2b.session",t);else localStorage.removeItem("b2b.session")}catch(e){}}
 function captureSession(){const m=location.hash.match(/session=([0-9a-f]{64})/);if(m){sessSet(m[1]);history.replaceState(null,"",location.pathname+location.search)}}
-async function loadAccount(){const t=sessGet();if(!t){ACCT=null;return}try{const r=await fetch(API_BASE+"/api/me",{headers:{Authorization:"Bearer "+t}});if(r.status===401){sessSet(null);ACCT=null;return}ACCT=await r.json()}catch(e){ACCT=null}}
+function sessKind(){try{return localStorage.getItem("b2b.kind")}catch(e){return null}}
+function setKind(k){try{localStorage.setItem("b2b.kind",k)}catch(e){}}
+async function loadAccount(){const t=sessGet();if(!t||sessKind()==="child"){ACCT=null;return}try{const r=await fetch(API_BASE+"/api/me",{headers:{Authorization:"Bearer "+t}});if(r.status===401){sessSet(null);ACCT=null;return}ACCT=await r.json()}catch(e){ACCT=null}}
 function viewGate(){
   let inner;
   if(ACCT){
@@ -3528,9 +3544,19 @@ function viewGate(){
       <input id="rpw2" type="password" autocomplete="new-password" style="max-width:360px;padding:12px;font:inherit">
       <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-create">Create account ${ARROW}</button><button class="more" data-act="gate-parent">Back to sign in</button></div>
       ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
+  }else if(gateMode==="playerlogin"){
+    inner=`<p class="lead">Type the sign-in code and PIN your parent gave you.</p>
+      <label class="small" for="ccode">Sign-in code</label>
+      <input id="ccode" autocomplete="off" autocapitalize="characters" placeholder="SAM-4Y9S" style="max-width:260px;padding:12px;font:inherit;text-transform:uppercase;letter-spacing:.12em">
+      <label class="small" for="cpin">PIN (4 numbers)</label>
+      <input id="cpin" inputmode="numeric" maxlength="4" autocomplete="off" type="password" style="max-width:160px;padding:12px;font:inherit;letter-spacing:.3em">
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-childsignin">Let's go ${ARROW}</button><button class="more" data-act="gate-back">Back</button></div>
+      ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
   }else{
-    inner=`<p class="lead">Parents sign in with an email link. Players start their profile here, then train from the app.</p>
-      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-parent">I'm a parent or guardian ${ARROW}</button><button class="more" data-act="gate-player">I'm a player ${ARROW}</button></div>`;
+    inner=`<p class="lead">Who's signing in?</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-parent">I'm a parent or guardian ${ARROW}</button><button class="more" data-act="gate-playerlogin">I'm a player with a sign-in code ${ARROW}</button></div>
+      <p class="small">New to Box to Box? <button class="more" data-act="gate-player">Set up a new player</button></p>
+      ${S.nick?`<p class="small"><button class="more" data-act="gate-close">Back to the app</button></p>`:""}`;
   }
   return `<section class="hero"><div class="bgword" aria-hidden="true">Box to box</div><div class="wrap"><div class="stack" style="gap:22px">
     <span class="eyebrow">Mini soccer to academy · Ages 5–18</span>
@@ -3549,6 +3575,34 @@ document.addEventListener("click",async e=>{
       else{const j=await r.json().catch(()=>({}));toast(j.error==="too_many_players"?"This account already has 5 players":"Couldn't save to your account. It's saved on this device.")}
     }catch(err){toast("Couldn't reach the server. It's saved on this device.")}
   }
+  else if(a==="gate-playerlogin"){gateMode="playerlogin";gateMsg="";render()}
+  else if(a==="gate-open"){gateOpen=true;gateMode=null;gateMsg="";render()}
+  else if(a==="gate-close"){gateOpen=false;gateMode=null;gateMsg="";render()}
+  else if(a==="gate-childsignin"){
+    const code=(document.getElementById("ccode")?.value||"").trim().toUpperCase(), pin=(document.getElementById("cpin")?.value||"").trim();
+    if(!code||!/^\d{4}$/.test(pin)){gateMsg="Type the code, and your 4-number PIN.";render();return}
+    gateMsg="Checking…";render();
+    try{
+      const r=await fetch(API_BASE+"/api/player/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,pin})});
+      const j=await r.json().catch(()=>({}));
+      if(r.ok&&j.token){
+        sessSet(j.token);setKind("child");setPlayerId(j.playerId);CHILD_INFO={nickname:j.nickname,age:j.age};ACCT=null;
+        await pullState(CHILD_INFO);
+        gateMsg="";gateMode=null;gateOpen=false;render();
+      }
+      else if(r.status===429){gateMsg="Too many wrong PINs. Ask your parent to help, or try again in 10 minutes.";render()}
+      else{gateMsg="That code or PIN isn't right. Check with your parent and try again.";render()}
+    }catch(err){gateMsg="Couldn't reach the server. Check your connection and try again.";render()}
+  }
+  else if(a==="pin-save"){
+    const id=b.dataset.id, pin=(document.getElementById("pin-"+id)?.value||"").trim();
+    if(!/^\d{4}$/.test(pin)){toast("A PIN is 4 numbers");return}
+    const t=sessGet();if(!t){toast("Sign in as a parent first");return}
+    try{const r=await fetch(API_BASE+"/api/players/"+id+"/pin",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify({pin})});
+      if(r.ok){toast("PIN saved. Your child can now sign in with it.");await loadAccount();render()}
+      else{toast("Couldn't save the PIN. Please try again.")}
+    }catch(err){toast("Couldn't reach the server.")}
+  }
   else if(a==="gate-register"){gateMode="register";gateMsg="";render()}
   else if(a==="gate-create"){
     const em=(document.getElementById("rmail")?.value||"").trim();
@@ -3561,7 +3615,7 @@ document.addEventListener("click",async e=>{
     try{
       const r=await fetch(API_BASE+"/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,password:pw})});
       const j=await r.json().catch(()=>({}));
-      if(r.ok&&j.token){sessSet(j.token);gateMsg="";gateMode=null;await afterSignIn()}
+      if(r.ok&&j.token){sessSet(j.token);setKind("parent");gateMsg="";gateMode=null;gateOpen=false;await afterSignIn()}
       else if(j.error==="exists"){gateMsg="An account with this email already exists. Go back and sign in instead.";render()}
       else{gateMsg="Something went wrong. Please try again.";render()}
     }catch(err){gateMsg="Couldn't reach the server. Check your connection and try again.";render()}
@@ -3573,7 +3627,7 @@ document.addEventListener("click",async e=>{
     try{
       const r=await fetch(API_BASE+"/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,password:pw})});
       const j=await r.json().catch(()=>({}));
-      if(r.ok&&j.token){sessSet(j.token);gateMsg="";gateMode=null;await afterSignIn()}
+      if(r.ok&&j.token){sessSet(j.token);setKind("parent");gateMsg="";gateMode=null;gateOpen=false;await afterSignIn()}
       else{gateMsg=j.error==="wrong_details"?"That email or password isn't right. Try again, or email yourself a link below.":"Something went wrong. Please try again.";render()}
     }catch(err){gateMsg="Couldn't reach the sign-in service. Check your connection and try again.";render()}
   }
@@ -3613,6 +3667,7 @@ async function pushState(){
     if(r.status===401){sessSet(null);ACCT=null}}catch(e){}
 }
 function schedulePush(){if(!S.nick||!sessGet()||!playerId())return;clearTimeout(pushTimer);pushTimer=setTimeout(pushState,1200)}
+let CHILD_INFO=null;
 async function pullState(){
   const t=sessGet(),id=playerId();
   if(!t||!id)return;
@@ -3621,7 +3676,7 @@ async function pullState(){
     if(!r.ok)return;
     const j=await r.json();
     if(j.data){S=Object.assign(fresh(),j.data)}
-    else{const p=(ACCT&&ACCT.players||[]).find(x=>x.id===id);if(p){S=Object.assign(fresh(),{nick:p.nickname,age:p.age,stage:p.age<=9?"g":"d",kit:1})}else return}
+    else{const p=CHILD_INFO||(ACCT&&ACCT.players||[]).find(x=>x.id===id);if(p){S=Object.assign(fresh(),{nick:p.nickname,age:p.age,stage:p.age<=9?"g":"d",kit:1})}else return}
     ensure();_saveLocal();
   }catch(e){}
 }
