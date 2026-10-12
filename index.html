@@ -803,7 +803,7 @@ const ICON={
 const KEY="b2b.player.v1";
 function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function fresh(){return {nick:"",age:9,stage:"d",kit:1,xp:0,week:{key:weekKey(),xp:0},done:{},log:[],lastDay:"",streak:0,best:0,hats:0,hatDay:"",badges:[]}}
+function fresh(){return {nick:"",age:9,stage:"d",kit:1,xp:0,week:{key:weekKey(),xp:0},done:{},log:[],lastDay:"",streak:0,best:0,hats:0,hatDay:"",badges:[],freezes:0,freezeUsed:0}}
 let S=Object.assign(fresh(),load()||{});
 let view="home", detailId=null, filterP="all", filterS=S.stage, boardMode="week", boardScope="all";
 let ob={nick:"",age:10,kit:1,level:"d"};
@@ -812,7 +812,22 @@ let timer={id:null,left:0,running:false,h:null};
 let confirmReset=false, editOpen=false;
 
 function rollWeek(){const wk=weekKey();if(S.week.key!==wk){S.week={key:wk,xp:0};save()}}
-function liveStreak(){return (S.lastDay===dayKey()||S.lastDay===yesterday())?S.streak:0}
+function twoDaysAgo(){const d=new Date();d.setDate(d.getDate()-2);return dayKey(d)}
+/* Streak freezes: one missed day is covered if the child has a freeze. A freeze is earned every 7-day streak, up to 2. */
+function bumpStreak(t){
+  if(S.lastDay===t)return;
+  if(!S.lastDay)S.streak=1;
+  else if(S.lastDay===yesterday())S.streak=S.streak+1;
+  else if(S.lastDay===twoDaysAgo()&&(S.freezes||0)>0&&S.streak>0){S.freezes--;S.freezeUsed=(S.freezeUsed||0)+1;S.streak=S.streak+1;setTimeout(()=>toast("Streak freeze used. Your streak is safe."),600)}
+  else S.streak=1;
+  S.lastDay=t;
+  if(S.streak>0&&S.streak%7===0)S.freezes=Math.min(2,(S.freezes||0)+1);
+}
+function liveStreak(){
+  if(S.lastDay===dayKey()||S.lastDay===yesterday())return S.streak;
+  if(S.lastDay===twoDaysAgo()&&(S.freezes||0)>0)return S.streak;
+  return 0;
+}
 function todays3(){const n=dayNum();return ["mind","ment","move"].map(p=>{const list=C.filter(c=>c.s===S.stage&&c.p===p);return list[n%list.length]})}
 const doneToday=id=>S.done[id]===dayKey();
 
@@ -853,7 +868,7 @@ function complete(id){
   S.done[id]=today;
   S.log.unshift({id,day:today,xp:c.xp,feel:draft.feel[id]||"",note:(draft.note[id]||"").trim().slice(0,400)});
   S.log=S.log.slice(0,300);
-  if(S.lastDay!==today){S.streak=(S.lastDay===yesterday())?S.streak+1:1;S.lastDay=today}
+  bumpStreak(today);
   S.best=Math.max(S.best||0,S.streak);
   let msg=`+${c.xp} XP`;
   if(S.hatDay!==today&&todays3().every(t=>doneToday(t.id))){S.hatDay=today;S.hats=(S.hats||0)+1;gain+=30;msg+=" · Hat-trick +30"}
@@ -1067,7 +1082,7 @@ function complete(id){
   const writes=Object.values(draft.w[id]||{}).map(x=>String(x).trim()).filter(Boolean);
   const note=[...writes,(draft.note[id]||"").trim(),fnote].filter(Boolean).join(" · ").slice(0,700);
   S.log.unshift({id,day:today,xp:gain,feel:draft.feel[id]||"",note});S.log=S.log.slice(0,300);
-  if(S.lastDay!==today){S.streak=(S.lastDay===yesterday())?S.streak+1:1;S.lastDay=today}
+  bumpStreak(today);
   S.best=Math.max(S.best||0,S.streak);
   let promo=null;
   if(c.p==="trial"&&first){S.promos.push(c.s);const i=STAGE_ORDER.indexOf(c.s);if(i<STAGE_ORDER.length-1){S.stage=STAGE_ORDER[i+1];filterS=S.stage;promo=S.stage;S.newCount=DAILY_NEW;S.newDay=today}else{S.grad=true;promo="grad"}}
@@ -1433,7 +1448,11 @@ function viewToday(){
   return `<section class="hero" style="min-height:0;padding-bottom:8px"><div class="wrap"><div class="stack" style="gap:18px">
     <span class="eyebrow">${kid?"Your mission today":"Today"}</span>
     <h1>${kid?`Let's go, <em class="v">${esc(S.nick)}!</em>`:`Ready, <em class="v">${esc(S.nick)}.</em>`}</h1>
+    ${nextUpCard()}
+    <div class="row" style="gap:14px;flex-wrap:wrap"><span class="chip v">${ICON.flame} ${liveStreak()} day${liveStreak()===1?"":"s"} streak</span>${S.freezes?`<span class="small">${S.freezes} streak freeze${S.freezes>1?"s":""} ready to cover a missed day</span>`:""}</div>
     ${todayBlock()}
+    ${nextBadgeCard()}
+    <button data-act="ics" style="${OUT_STYLE}">Add a daily training reminder to my calendar ${ARROW}</button>
     <div class="stack" style="gap:10px"><span class="eyebrow">Quick links</span>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
         <button data-act="tab" data-v="path" style="${QL_STYLE}">Level map <span aria-hidden="true" style="font-size:1.4em">${ARROW}</span></button>
@@ -1742,7 +1761,7 @@ function drillDone(id){
   const today=dayKey();S.drillDay=S.drillDay||{};
   if(S.drillDay[id]===today){toast("Done today. Come back tomorrow for more XP.");return}
   S.drillDay[id]=today;rollWeek();
-  if(S.lastDay!==today){S.streak=(S.lastDay===yesterday())?S.streak+1:1;S.lastDay=today}S.best=Math.max(S.best||0,S.streak);
+  bumpStreak(today);S.best=Math.max(S.best||0,S.streak);
   S.xp+=10;S.week.xp+=10;save();sync();toast("+10 XP");soft();
 }
 function drillCard(d,col){
@@ -1908,7 +1927,7 @@ function logScore(id){
   const prev=dPB(id),lvBefore=dLevel(id);
   S.scores=S.scores||{};(S.scores[id]=S.scores[id]||[]).push({d:dayKey(),v:val});S.scores[id]=S.scores[id].slice(-40);
   const today=dayKey();rollWeek();markDay();
-  if(S.lastDay!==today){S.streak=(S.lastDay===yesterday())?S.streak+1:1;S.lastDay=today}S.best=Math.max(S.best||0,S.streak);
+  bumpStreak(today);S.best=Math.max(S.best||0,S.streak);
   let xp=0,msg="Score logged";
   S.drillDay=S.drillDay||{};if(S.drillDay[id]!==today){S.drillDay[id]=today;xp+=10}
   const isPB=prev!=null&&bmMeets(b,val,prev)&&val!==prev;
@@ -2319,7 +2338,7 @@ const SCEN=[
 ];
 let mindTab="hub",jdraft={},repTimer={left:0,run:false,h:null},resetRun={step:-1,h:null},scenIdx=null,scenPick=null;
 function fivecAvg(n,offset){const J=(S.journal||[]).filter(j=>j.five);const L=J.slice(Math.max(0,J.length-n-(offset||0)),J.length-(offset||0));if(!L.length)return null;const o={};FIVEC.forEach(f=>{o[f.k]=L.reduce((s,j)=>s+(j.five[f.k]||0),0)/L.length});o.n=L.length;return o}
-function mindXP(n,msg){rollWeek();S.xp+=n;S.week.xp+=n;markDay();const t=dayKey();if(S.lastDay!==t){S.streak=(S.lastDay===yesterday())?S.streak+1:1;S.lastDay=t}S.best=Math.max(S.best||0,S.streak);save();sync();pushResults();toast(msg+` · +${n} XP`)}
+function mindXP(n,msg){rollWeek();S.xp+=n;S.week.xp+=n;markDay();const t=dayKey();bumpStreak(t);S.best=Math.max(S.best||0,S.streak);save();sync();pushResults();toast(msg+` · +${n} XP`)}
 function repToday(){return REPS[dayNum()%REPS.length]}
 function repDone(){return (S.reps||{})[dayKey()]}
 /* corners: fold the 5Cs into Psychological and Social */
@@ -3691,6 +3710,64 @@ async function afterSignIn(){
 }
 const _saveLocal=save;
 save=function(){_saveLocal();schedulePush()};
+
+/* ---- retention: next up, next badge, daily reminder, weekly summary for parents ---- */
+const OUT_STYLE=QL_STYLE.replace("background:var(--volt)","background:transparent").replace("color:var(--on-volt)","color:var(--volt)").replace("font-size:1.15rem","font-size:1rem");
+BADGES.push(
+ {id:"s14",name:"Fortnight",desc:"Keep a 14-day streak",test:s=>s.best>=14,need:s=>[s.best,14]},
+ {id:"s30",name:"Iron Month",desc:"Keep a 30-day streak",test:s=>s.best>=30,need:s=>[s.best,30]},
+ {id:"n10",name:"Ten Sessions",desc:"Finish 10 challenges",test:s=>s.log.length>=10,need:s=>[s.log.length,10]},
+ {id:"n50",name:"Fifty Strong",desc:"Finish 50 challenges",test:s=>s.log.length>=50,need:s=>[s.log.length,50]},
+ {id:"x1000",name:"Four Figures",desc:"Reach 1,000 XP",test:s=>s.xp>=1000,need:s=>[s.xp,1000]},
+ {id:"x2000",name:"Double Figures",desc:"Reach 2,000 XP",test:s=>s.xp>=2000,need:s=>[s.xp,2000]},
+ {id:"hat5",name:"Hat-Trick Hero",desc:"Earn 5 Hat-Tricks",test:s=>(s.hats||0)>=5,need:s=>[s.hats||0,5]},
+ {id:"fz",name:"Safe Hands",desc:"Save a streak with a freeze",test:s=>(s.freezeUsed||0)>=1}
+);
+const NEED_OF={s3:s=>[s.best,3],s7:s=>[s.best,7],half:s=>[s.xp,700],b2b:s=>[s.xp,3200],mind5:s=>[countP(s,"mind"),5],ment5:s=>[countP(s,"ment"),5],move5:s=>[countP(s,"move"),5],think:s=>[(s.log||[]).filter(l=>l.note).length,5]};
+BADGES.forEach(b=>{if(NEED_OF[b.id])b.need=NEED_OF[b.id]});
+
+function nextUpCard(){
+  const hit=PILLAR.map(p=>({p,n:planInfo(p.k).nextId})).find(x=>x.n&&sessState(x.n)==="next");
+  if(!hit)return "";
+  return `<button data-act="open" data-id="${hit.n}" style="${QL_STYLE}"><span class="stack" style="gap:4px;min-width:0"><span style="font-size:.72rem;letter-spacing:.14em">Next up · ${esc(hit.p.n)}</span><span>${esc(byId[hit.n].t)}</span></span><span aria-hidden="true" style="font-size:1.4em">${ARROW}</span></button>`;
+}
+function nextBadge(){
+  const left=BADGES.filter(b=>!S.badges.includes(b.id));
+  if(!left.length)return null;
+  const close=left.filter(b=>b.need).map(b=>{const [c,t]=b.need(S);return {b,c,t,pct:Math.min(1,c/t)}}).sort((a,b)=>b.pct-a.pct);
+  return close[0]||{b:left[0],c:0,t:0,pct:0};
+}
+function nextBadgeCard(){
+  const nb=nextBadge();if(!nb)return "";
+  const bar=nb.t?`<span style="display:block;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;margin-top:10px"><span style="display:block;height:100%;width:${Math.round(nb.pct*100)}%;background:var(--volt)"></span></span><span class="small">${nb.c} of ${nb.t}</span>`:"";
+  return `<div style="padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface)"><span class="eyebrow">Next badge</span><b style="display:block;margin-top:4px">${esc(nb.b.name)}</b><span class="small">${esc(nb.b.desc)}</span>${bar}</div>`;
+}
+/* Calendar reminder: a file the child opens once; their calendar repeats it every day at 5pm. Works without a server. */
+function downloadReminder(){
+  const pad=n=>String(n).padStart(2,"0"),d=new Date();
+  const stamp=d.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z");
+  const day=`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+  const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Box to Box//Training reminder//EN","CALSCALE:GREGORIAN","BEGIN:VEVENT",
+    `UID:b2b-reminder-${Date.now()}@boxtoboxdevelopment.co.uk`,`DTSTAMP:${stamp}`,`DTSTART:${day}T170000`,`DTEND:${day}T173000`,"RRULE:FREQ=DAILY",
+    "SUMMARY:Box to Box training","DESCRIPTION:Your three challenges for today are waiting. Open the app and pick the first one.","URL:https://boxtoboxdevelopment.co.uk/",
+    "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Box to Box training","TRIGGER:-PT0M","END:VALARM","END:VEVENT","END:VCALENDAR"];
+  const url=URL.createObjectURL(new Blob([lines.join("\r\n")],{type:"text/calendar"}));
+  const a=document.createElement("a");a.href=url;a.download="box-to-box-reminder.ics";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+  toast("Open the file you downloaded to add the daily reminder.");
+}
+document.addEventListener("click",e=>{if(e.target.closest('[data-act="ics"]'))downloadReminder()});
+
+/* Weekly summary, saved inside the child's progress so the server can email parents without knowing the content. */
+function weekSummary(){
+  const since=dayKey(new Date(Date.now()-6*864e5));
+  const sessions=(S.log||[]).filter(l=>l.day&&l.day>=since).length;
+  const hit=PILLAR.map(p=>({p,n:planInfo(p.k).nextId})).find(x=>x.n&&sessState(x.n)==="next");
+  return {updated:dayKey(),sessions,streak:liveStreak(),bestStreak:S.best||0,badges:(S.badges||[]).length,xp:S.xp||0,nextUp:hit?byId[hit.n].t:null};
+}
+const _pushStateRaw=pushState;
+pushState=async function(){if(S.nick)S.summary=weekSummary();return _pushStateRaw()};
+
 captureSession();booted=true;render();loadAfterBoot();
 </script>
 </body>
