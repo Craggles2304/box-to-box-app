@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Box to Box</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&display=swap">
@@ -555,6 +560,8 @@ h2{font-size:clamp(2.7rem,8vw,4.6rem);line-height:.84}
 .fday h4{font-size:1.25rem;text-transform:uppercase;font-family:var(--f-display);font-stretch:62%;font-weight:900}
 @media (prefers-reduced-motion:reduce){.chip.v{animation:none}}
 </style>
+</head>
+<body>
 
 <div id="app"></div>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -3508,3 +3515,5 @@ document.addEventListener("click",async e=>{
 });
 captureSession();booted=true;render();loadAccount().then(()=>{if(!S.nick)render()});
 </script>
+</body>
+</html>
