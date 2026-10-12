@@ -3515,8 +3515,18 @@ function viewGate(){
       <label class="small" for="gpw">Password</label>
       <input id="gpw" type="password" autocomplete="current-password" style="max-width:360px;padding:12px;font:inherit">
       <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-login">Sign in ${ARROW}</button><button class="more" data-act="gate-back">Back</button></div>
-      <div class="stack" style="gap:8px"><p class="small">New here, or forgotten your password? We'll email you a link. Tap it to create your account, or to sign in if you already have one.</p>
-      <div><button class="more" data-act="gate-send">Create an account ${ARROW}</button></div></div>
+      ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}
+      <div class="stack" style="gap:8px;margin-top:8px"><p class="small">Don't have an account? <button class="more" data-act="gate-register">Create one</button></p>
+      <p class="small">Forgotten your password? <button class="more" data-act="gate-send">Email me a sign-in link</button></p></div>`;
+  }else if(gateMode==="register"){
+    inner=`<p class="lead">Create your parent account. Use an email you check, and a password you'll remember.</p>
+      <label class="small" for="rmail">Email</label>
+      <input id="rmail" type="email" autocomplete="email" placeholder="you@example.com" style="max-width:360px;padding:12px;font:inherit">
+      <label class="small" for="rpw">Password (at least 8 characters)</label>
+      <input id="rpw" type="password" autocomplete="new-password" style="max-width:360px;padding:12px;font:inherit">
+      <label class="small" for="rpw2">Type your password again</label>
+      <input id="rpw2" type="password" autocomplete="new-password" style="max-width:360px;padding:12px;font:inherit">
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-create">Create account ${ARROW}</button><button class="more" data-act="gate-parent">Back to sign in</button></div>
       ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
   }else{
     inner=`<p class="lead">Parents sign in with an email link. Players start their profile here, then train from the app.</p>
@@ -3538,6 +3548,23 @@ document.addEventListener("click",async e=>{
       if(r.ok){await loadAccount();toast(`${S.nick} is saved to your account`)}
       else{const j=await r.json().catch(()=>({}));toast(j.error==="too_many_players"?"This account already has 5 players":"Couldn't save to your account. It's saved on this device.")}
     }catch(err){toast("Couldn't reach the server. It's saved on this device.")}
+  }
+  else if(a==="gate-register"){gateMode="register";gateMsg="";render()}
+  else if(a==="gate-create"){
+    const em=(document.getElementById("rmail")?.value||"").trim();
+    const pw=document.getElementById("rpw")?.value||"", pw2=document.getElementById("rpw2")?.value||"";
+    if(!em){gateMsg="Type your email first.";render();return}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){gateMsg="That email doesn't look right. Check it and try again.";render();return}
+    if(pw.length<8){gateMsg="Your password needs at least 8 characters.";render();return}
+    if(pw!==pw2){gateMsg="The two passwords don't match. Type them again.";render();return}
+    gateMsg="Creating your account…";render();
+    try{
+      const r=await fetch(API_BASE+"/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,password:pw})});
+      const j=await r.json().catch(()=>({}));
+      if(r.ok&&j.token){sessSet(j.token);await loadAccount();gateMsg="";gateMode=null;render()}
+      else if(j.error==="exists"){gateMsg="An account with this email already exists. Go back and sign in instead.";render()}
+      else{gateMsg="Something went wrong. Please try again.";render()}
+    }catch(err){gateMsg="Couldn't reach the server. Check your connection and try again.";render()}
   }
   else if(a==="gate-login"){
     const em=(document.getElementById("gemail")?.value||"").trim(), pw=document.getElementById("gpw")?.value||"";

@@ -228,6 +228,26 @@ async function handleSetPassword(env, request) {
   return json(env, { ok: true });
 }
 
+
+async function handleRegister(env, request) {
+  let body;
+  try { body = await request.json(); } catch { return json(env, { error: "bad_json" }, 400); }
+  const email = String(body.email || "").trim().toLowerCase();
+  const password = String(body.password || "");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return json(env, { error: "invalid_email" }, 400);
+  if (password.length < 8 || password.length > 200) return json(env, { error: "password_length" }, 400);
+  const existing = await env.DB.prepare(`SELECT id FROM parents WHERE email = ?`).bind(email).first();
+  if (existing) return json(env, { error: "exists" }, 409);
+  const id = uid();
+  const salt = randomToken().slice(0, 32);
+  const hash = await hashPassword(password, salt);
+  await env.DB.prepare(
+    `INSERT INTO parents (id, email, created_at, consent_version, consent_at, password_hash, password_salt) VALUES (?, ?, ?, NULL, NULL, ?, ?)`
+  ).bind(id, email, nowIso(), hash, salt).run();
+  const token = await newSession(env, id);
+  return json(env, { token }, 201);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -241,6 +261,7 @@ export default {
       if (p === "/api/auth/logout" && request.method === "POST") return handleLogout(env, request);
       if (p === "/api/me" && request.method === "GET") return handleMe(env, request);
       if (p === "/api/auth/login" && request.method === "POST") return handleLogin(env, request);
+      if (p === "/api/auth/register" && request.method === "POST") return handleRegister(env, request);
       if (p === "/api/auth/set-password" && request.method === "POST") return handleSetPassword(env, request);
       if (p === "/api/players" && request.method === "POST") return handleAddPlayer(env, request);
       return json(env, { error: "not_found" }, 404);
