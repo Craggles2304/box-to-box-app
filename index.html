@@ -3501,13 +3501,21 @@ async function loadAccount(){const t=sessGet();if(!t){ACCT=null;return}try{const
 function viewGate(){
   let inner;
   if(ACCT){
-    inner=`<p class="lead">Signed in as <strong>${esc(ACCT.parent.email)}</strong>.</p>
-      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-player">Set up a player ${ARROW}</button><button class="more" data-act="gate-signout">Sign out</button></div>`;
+    const pwBox=ACCT.parent.hasPassword?"":`<div class="stack" style="gap:10px;padding:16px;border:1px solid var(--line)">
+        <strong>Set a password</strong><p class="small">So you can sign in any time without waiting for an email.</p>
+        <input id="spw" type="password" autocomplete="new-password" placeholder="At least 8 characters" style="max-width:360px;padding:12px;font:inherit">
+        <div><button class="btn" data-act="gate-setpw">Save password</button></div></div>`;
+    inner=`<p class="lead">Signed in as <strong>${esc(ACCT.parent.email)}</strong>.</p>${pwBox}
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-player">Set up a player ${ARROW}</button><button class="more" data-act="gate-signout">Sign out</button></div>
+      ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
   }else if(gateMode==="parent"){
-    inner=`<p class="lead">Enter your email and we'll send you a sign-in link. It works once and expires in 15 minutes.</p>
-      <label class="small" for="gemail">Parent or guardian email</label>
+    inner=`<p class="lead">Sign in with your email and password.</p>
+      <label class="small" for="gemail">Email</label>
       <input id="gemail" type="email" autocomplete="email" placeholder="you@example.com" style="max-width:360px;padding:12px;font:inherit">
-      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-send">Email me a link ${ARROW}</button><button class="more" data-act="gate-back">Back</button></div>
+      <label class="small" for="gpw">Password</label>
+      <input id="gpw" type="password" autocomplete="current-password" style="max-width:360px;padding:12px;font:inherit">
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-login">Sign in ${ARROW}</button><button class="more" data-act="gate-back">Back</button></div>
+      <p class="small"><button class="more" data-act="gate-send">No password yet, or forgotten it? Email me a sign-in link</button></p>
       ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
   }else{
     inner=`<p class="lead">Parents sign in with an email link. Players start their profile here, then train from the app.</p>
@@ -3529,6 +3537,28 @@ document.addEventListener("click",async e=>{
       if(r.ok){await loadAccount();toast(`${S.nick} is saved to your account`)}
       else{const j=await r.json().catch(()=>({}));toast(j.error==="too_many_players"?"This account already has 5 players":"Couldn't save to your account. It's saved on this device.")}
     }catch(err){toast("Couldn't reach the server. It's saved on this device.")}
+  }
+  else if(a==="gate-login"){
+    const em=(document.getElementById("gemail")?.value||"").trim(), pw=document.getElementById("gpw")?.value||"";
+    if(!em||!pw){gateMsg="Enter your email and password.";render();return}
+    gateMsg="Signing in…";render();
+    try{
+      const r=await fetch(API_BASE+"/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,password:pw})});
+      const j=await r.json().catch(()=>({}));
+      if(r.ok&&j.token){sessSet(j.token);await loadAccount();gateMsg="";gateMode=null;render()}
+      else{gateMsg=j.error==="wrong_details"?"That email or password isn't right. Try again, or email yourself a link below.":"Something went wrong. Please try again.";render()}
+    }catch(err){gateMsg="Couldn't reach the sign-in service. Check your connection and try again.";render()}
+  }
+  else if(a==="gate-setpw"){
+    const pw=document.getElementById("spw")?.value||"";
+    if(pw.length<8){gateMsg="Use at least 8 characters.";render();return}
+    const t=sessGet();if(!t){gateMsg="Your sign-in has expired. Please sign in again.";render();return}
+    try{
+      const r=await fetch(API_BASE+"/api/auth/set-password",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify({password:pw})});
+      if(r.ok){await loadAccount();gateMsg="Password saved. Next time, sign in with your email and password."}
+      else{gateMsg="Couldn't save the password. Please try again."}
+    }catch(err){gateMsg="Couldn't reach the server. Please try again."}
+    render();
   }
   else if(a==="gate-send"){
     const em=(document.getElementById("gemail")?.value||"").trim();

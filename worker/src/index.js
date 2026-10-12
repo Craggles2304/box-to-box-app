@@ -142,9 +142,10 @@ async function handleMe(env, request) {
   ).bind(parent.id).all();
   const entitlements = {};
   for (const e of ent.results || []) entitlements[e.product] = { status: e.status, currentPeriodEnd: e.current_period_end };
+  const pw = await env.DB.prepare(`SELECT password_hash IS NOT NULL AS has FROM parents WHERE id = ?`).bind(parent.id).first();
   return json(env, {
     signedIn: true,
-    parent: { email: parent.email },
+    parent: { email: parent.email, hasPassword: !!(pw && pw.has) },
     players: players.results || [],
     entitlements,
   });
@@ -168,6 +169,65 @@ async function handleAddPlayer(env, request) {
   return json(env, { id, nickname, age }, 201);
 }
 
+
+// ---- passwords: PBKDF2-SHA256, 100k iterations, random salt per parent ----
+const PBKDF2_ITER = 100000;
+async function hashPassword(password, saltHex) {
+  const key = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: enc.encode(saltHex), iterations: PBKDF2_ITER, hash: "SHA-256" }, key, 256
+  );
+  return hex(bits);
+}
+const constantTimeEqual = (a, b) => {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+};
+
+async function newSession(env, parentId) {
+  const session = randomToken();
+  await env.DB.prepare(
+    `INSERT INTO sessions (token_hash, parent_id, expires_at, created_at) VALUES (?, ?, ?, ?)`
+  ).bind(await sha256(session), parentId, inDays(SESSION_DAYS), nowIso()).run();
+  return session;
+}
+
+async function handleLogin(env, request) {
+  let body;
+  try { body = await request.json(); } catch { return json(env, { error: "bad_json" }, 400); }
+  const email = String(body.email || "").trim().toLowerCase();
+  const password = String(body.password || "");
+  if (!email || !password) return json(env, { error: "missing_fields" }, 400);
+  const parent = await env.DB.prepare(
+    `SELECT id, password_hash, password_salt FROM parents WHERE email = ?`
+  ).bind(email).first();
+  if (!parent || !parent.password_hash) {
+    // Same answer whether the account is missing or has no password yet.
+    return json(env, { error: "wrong_details" }, 401);
+  }
+  const hash = await hashPassword(password, parent.password_salt);
+  if (!constantTimeEqual(hash, parent.password_hash)) return json(env, { error: "wrong_details" }, 401);
+  const token = await newSession(env, parent.id);
+  return json(env, { token });
+}
+
+async function handleSetPassword(env, request) {
+  const parent = await currentParent(env, request);
+  if (!parent) return json(env, { error: "not_signed_in" }, 401);
+  let body;
+  try { body = await request.json(); } catch { return json(env, { error: "bad_json" }, 400); }
+  const password = String(body.password || "");
+  if (password.length < 8 || password.length > 200) return json(env, { error: "password_length" }, 400);
+  const salt = randomToken().slice(0, 32);
+  const hash = await hashPassword(password, salt);
+  await env.DB.prepare(
+    `UPDATE parents SET password_hash = ?, password_salt = ? WHERE id = ?`
+  ).bind(hash, salt, parent.id).run();
+  return json(env, { ok: true });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -180,6 +240,8 @@ export default {
       if (p === "/api/auth/verify" && request.method === "GET") return handleAuthVerify(env, request);
       if (p === "/api/auth/logout" && request.method === "POST") return handleLogout(env, request);
       if (p === "/api/me" && request.method === "GET") return handleMe(env, request);
+      if (p === "/api/auth/login" && request.method === "POST") return handleLogin(env, request);
+      if (p === "/api/auth/set-password" && request.method === "POST") return handleSetPassword(env, request);
       if (p === "/api/players" && request.method === "POST") return handleAddPlayer(env, request);
       return json(env, { error: "not_found" }, 404);
     } catch (err) {
