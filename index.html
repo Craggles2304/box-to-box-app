@@ -538,6 +538,22 @@ details.drill[open] .plus{transform:rotate(45deg)}
 .fshop ul{list-style:none;padding:0;margin:0}
 .fshop li{display:flex;flex-direction:column;gap:3px;padding:12px 0;border-bottom:1px solid var(--line);font-size:.92rem}
 .fshop li small{color:var(--muted);font-size:.8rem}
+
+/* ---- style pass: bolder type, square shapes, volt used for the key action ---- */
+h1{font-size:clamp(3.8rem,14vw,9rem)}
+h2{font-size:clamp(2.7rem,8vw,4.6rem);line-height:.84}
+.btn,.chip,.pills button,.x,.fqc label,.fuelmini li,.fuelprev span,.feel button,.sw{border-radius:0!important}
+.chip.v{animation:punch .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes punch{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+.panel,.art,.feature,.pm,.fuelgate,.fform,.fbudget,.fuelm,.drill{border-radius:0!important}
+.fuelgate,.fbudget{box-shadow:6px 6px 0 var(--volt)}
+.fqc label:has(input:checked){background:var(--volt);color:var(--on-volt);box-shadow:none}
+.fqc label:has(input:checked) span{color:var(--on-volt);font-weight:800}
+.subnav button[aria-current="page"]{color:var(--volt)}
+.subnav button[aria-current="page"]::after{height:4px}
+.fshop h3{font-size:1.6rem;color:var(--volt)}
+.fday h4{font-size:1.25rem;text-transform:uppercase;font-family:var(--f-display);font-stretch:62%;font-weight:900}
+@media (prefers-reduced-motion:reduce){.chip.v{animation:none}}
 </style>
 
 <div id="app"></div>
