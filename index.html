@@ -1405,7 +1405,7 @@ function cleanNick(s){return String(s||"").replace(/[^\p{L}\p{N} ._-]/gu,"").rep
 /* ---------- render + events ---------- */
 function render(){
   const root=document.getElementById("app"),nav=document.getElementById("tabs");
-  if(!S.nick){root.innerHTML=header()+`<main>${viewOnboard()}</main>`;nav.hidden=true;return}
+  if(!S.nick){root.innerHTML=header()+`<main>${gateMode==="player"?viewOnboard():viewGate()}</main>`;nav.hidden=true;return}
   rollWeek();nav.hidden=true;
   const body={home:viewHomeP,challenges:viewList,play:viewPlay,done:viewDone,path:viewPath,board:viewBoard,me:viewMe,coach:viewCoach,place:viewPlace,mind:viewMind,parents:viewParents,fuel:viewFuel,privacy:viewPrivacy,journal:viewDiary}[view]||viewHomeP;
   const sub=["home","path","challenges","play","mind","journal","fuel","me"].includes(view)?subNav():"";
@@ -3463,5 +3463,48 @@ const INT={
  e:{rpe:"8–9 of 10",focus:"Match rules: full focus, no walking, every rep is a game moment."}
 };
 
-booted=true;render();
+
+/* ---- front sign-in: parents (email link) and players (profile on this device) ---- */
+const API_BASE="https://box-to-box-api.craiigbrown2304.workers.dev";
+let gateMode=null, gateMsg="", ACCT=null;
+function sessGet(){try{return localStorage.getItem("b2b.session")}catch(e){return null}}
+function sessSet(t){try{if(t)localStorage.setItem("b2b.session",t);else localStorage.removeItem("b2b.session")}catch(e){}}
+function captureSession(){const m=location.hash.match(/session=([0-9a-f]{64})/);if(m){sessSet(m[1]);history.replaceState(null,"",location.pathname+location.search)}}
+async function loadAccount(){const t=sessGet();if(!t){ACCT=null;return}try{const r=await fetch(API_BASE+"/api/me",{headers:{Authorization:"Bearer "+t}});if(r.status===401){sessSet(null);ACCT=null;return}ACCT=await r.json()}catch(e){ACCT=null}}
+function viewGate(){
+  let inner;
+  if(ACCT){
+    inner=`<p class="lead">Signed in as <strong>${esc(ACCT.parent.email)}</strong>.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-player">Set up a player ${ARROW}</button><button class="more" data-act="gate-signout">Sign out</button></div>`;
+  }else if(gateMode==="parent"){
+    inner=`<p class="lead">Enter your email and we'll send you a sign-in link. It works once and expires in 15 minutes.</p>
+      <label class="small" for="gemail">Parent or guardian email</label>
+      <input id="gemail" type="email" autocomplete="email" placeholder="you@example.com" style="max-width:360px;padding:12px;font:inherit">
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-send">Email me a link ${ARROW}</button><button class="more" data-act="gate-back">Back</button></div>
+      ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
+  }else{
+    inner=`<p class="lead">Parents sign in with an email link. Players start their profile here, then train from the app.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-parent">I'm a parent or guardian ${ARROW}</button><button class="more" data-act="gate-player">I'm a player ${ARROW}</button></div>`;
+  }
+  return `<section class="hero"><div class="bgword" aria-hidden="true">Box to box</div><div class="wrap"><div class="stack" style="gap:22px">
+    <span class="eyebrow">Mini soccer to academy · Ages 5–18</span>
+    <h1>Sign <em class="v">in.</em></h1>${inner}</div></div></section>`;
+}
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act;
+  if(a==="gate-parent"){gateMode="parent";gateMsg="";render()}
+  else if(a==="gate-player"){gateMode="player";render()}
+  else if(a==="gate-back"){gateMode=null;gateMsg="";render()}
+  else if(a==="gate-signout"){sessSet(null);ACCT=null;gateMode=null;render()}
+  else if(a==="gate-send"){
+    const em=(document.getElementById("gemail")?.value||"").trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){gateMsg="Enter a valid email address.";render();return}
+    gateMsg="Sending…";render();
+    try{const r=await fetch(API_BASE+"/api/auth/request",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em})});
+      gateMsg=r.ok?"Check your inbox (and spam) for a sign-in link.":"Something went wrong. Please try again."}
+    catch(err){gateMsg="Couldn't reach the sign-in service. Check your connection and try again."}
+    render();
+  }
+});
+captureSession();booted=true;render();loadAccount().then(()=>{if(!S.nick)render()});
 </script>

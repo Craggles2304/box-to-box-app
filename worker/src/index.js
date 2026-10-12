@@ -19,7 +19,7 @@ function corsHeaders(env) {
     "Access-Control-Allow-Origin": env.APP_ORIGIN,
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Vary": "Origin",
   };
 }
@@ -46,7 +46,8 @@ function sessionCookie(token, maxAgeSeconds) {
 
 // Returns the parent row for the request's session, or null.
 async function currentParent(env, request) {
-  const token = getCookie(request, "b2b_session");
+  const auth = request.headers.get("Authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : getCookie(request, "b2b_session");
   if (!token) return null;
   const hash = await sha256(token);
   const row = await env.DB.prepare(
@@ -118,10 +119,7 @@ async function handleAuthVerify(env, request) {
 
   return new Response(null, {
     status: 302,
-    headers: {
-      Location: env.APP_URL,
-      "Set-Cookie": sessionCookie(session, SESSION_DAYS * 86400),
-    },
+    headers: { Location: `${env.APP_URL}#session=${session}` },
   });
 }
 
