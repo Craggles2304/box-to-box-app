@@ -3515,7 +3515,7 @@ function viewGate(){
       <label class="small" for="gpw">Password</label>
       <input id="gpw" type="password" autocomplete="current-password" style="max-width:360px;padding:12px;font:inherit">
       <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-login">Sign in ${ARROW}</button><button class="more" data-act="gate-back">Back</button></div>
-      <p class="small"><button class="more" data-act="gate-send">No password yet, or forgotten it? Email me a sign-in link</button></p>
+      <p class="small"><button class="more" data-act="gate-send">No password yet, or forgotten it? Email me a sign-in link instead</button></p>
       ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
   }else{
     inner=`<p class="lead">Parents sign in with an email link. Players start their profile here, then train from the app.</p>
@@ -3562,7 +3562,8 @@ document.addEventListener("click",async e=>{
   }
   else if(a==="gate-send"){
     const em=(document.getElementById("gemail")?.value||"").trim();
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){gateMsg="Enter a valid email address.";render();return}
+    if(!em){gateMsg="Type your email in the box above first, then press this button again.";render();return}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){gateMsg="That email doesn't look right. Check it and try again.";render();return}
     gateMsg="Sending…";render();
     try{const r=await fetch(API_BASE+"/api/auth/request",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em})});
       gateMsg=r.ok?"Check your inbox (and spam) for a sign-in link.":"Something went wrong. Please try again."}
