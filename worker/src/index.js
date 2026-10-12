@@ -18,7 +18,7 @@ function corsHeaders(env) {
   return {
     "Access-Control-Allow-Origin": env.APP_ORIGIN,
     "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Vary": "Origin",
   };
@@ -375,6 +375,53 @@ async function handlePlayerLogin(env, request) {
   return json(env, { token, playerId: row.id, nickname: row.nickname, age: row.age });
 }
 
+// ---- weekly parent summary email ----
+const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+async function sendMail(env, to, subject, html) {
+  if (!env.RESEND_API_KEY || !env.MAIL_FROM) return false;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: env.MAIL_FROM, to: [to], subject, html }),
+  });
+  return res.ok;
+}
+
+// Emails each parent one summary per child. The app saves the summary inside the child's progress (S.summary).
+async function sendWeeklySummaries(env) {
+  const parents = await env.DB.prepare(`SELECT id, email FROM parents`).all();
+  for (const p of parents.results || []) {
+    const kids = await env.DB.prepare(
+      `SELECT pl.nickname, s.data FROM players pl LEFT JOIN player_state s ON s.player_id = pl.id
+       WHERE pl.parent_id = ? ORDER BY pl.created_at`
+    ).bind(p.id).all();
+    const blocks = [];
+    for (const k of kids.results || []) {
+      let sm = {};
+      try { sm = (k.data ? JSON.parse(k.data).summary : null) || {}; } catch { sm = {}; }
+      if (!sm.updated) {
+        blocks.push(`<h3>${escHtml(k.nickname)}</h3><p>No training recorded yet. Do the first challenge together this week.</p>`);
+        continue;
+      }
+      blocks.push(
+        `<h3>${escHtml(k.nickname)}</h3><ul>` +
+        `<li>Challenges this week: ${Number(sm.sessions) || 0}</li>` +
+        `<li>Current streak: ${Number(sm.streak) || 0} days (best ${Number(sm.bestStreak) || 0})</li>` +
+        `<li>Next up: ${sm.nextUp ? escHtml(sm.nextUp) : "plan complete at this level"}</li>` +
+        `</ul>`
+      );
+    }
+    if (!blocks.length) continue;
+    await sendMail(
+      env,
+      p.email,
+      "Box to Box: this week's training",
+      `<p>Here is this week's training summary.</p>${blocks.join("")}<p>Open Box to Box to keep the streak going.</p>`
+    );
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -401,5 +448,10 @@ export default {
     } catch (err) {
       return json(env, { error: "server_error" }, 500);
     }
+  },
+
+  // Runs on the weekly cron trigger (set in the Cloudflare dashboard, see wrangler.toml).
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(sendWeeklySummaries(env));
   },
 };
