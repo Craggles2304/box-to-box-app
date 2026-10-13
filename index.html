@@ -1436,10 +1436,12 @@ function render(){
   const root=document.getElementById("app"),nav=document.getElementById("tabs");
   if(!S.nick||gateOpen){root.innerHTML=header()+`<main>${gateMode==="player"?viewOnboard():viewGate()}</main>`;nav.hidden=true;return}
   rollWeek();
+  if(isChild()&&view==="parents")view="home";
   const body={home:viewToday,challenges:viewList,play:viewPlay,done:viewDone,path:viewPath,board:viewBoard,me:viewMe,coach:viewCoach,place:viewPlace,mind:viewMind,parents:viewParentsAcct,fuel:viewFuel,privacy:viewPrivacy,journal:viewDiary}[view]||viewToday;
   const cur=TAB_OF[view]||"home";
   root.innerHTML=header().replace(/<nav class="topnav"[\s\S]*?<\/nav>/,"")+`<main>${body()}</main>`;
-  nav.innerHTML=`<div class="in">${TABS.map(([v,label,icon])=>`<button data-act="tab" data-v="${v}" ${cur===v?'aria-current="page"':""}>${icon}${label}</button>`).join("")}</div>`;
+  const tabs=TABS.filter(([v])=>!(v==="parents"&&isChild()));
+  nav.innerHTML=`<div class="in" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(([v,label,icon])=>`<button data-act="tab" data-v="${v}" ${cur===v?'aria-current="page"':""}>${icon}${label}</button>`).join("")}</div>`;
   nav.hidden=false;
 }
 const QL_STYLE="display:flex;align-items:center;justify-content:space-between;min-height:64px;padding:16px 20px;border:2px solid var(--volt);border-radius:12px;background:var(--volt);color:var(--on-volt);font-family:inherit;font-weight:800;font-size:1.15rem;line-height:1.1;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-align:left";
@@ -1452,7 +1454,7 @@ function viewToday(){
     <div class="row" style="gap:14px;flex-wrap:wrap"><span class="chip v">${ICON.flame} ${liveStreak()} day${liveStreak()===1?"":"s"} streak</span>${S.freezes?`<span class="small">${S.freezes} streak freeze${S.freezes>1?"s":""} ready to cover a missed day</span>`:""}</div>
     ${todayBlock()}
     ${nextBadgeCard()}
-    <button data-act="ics" style="${OUT_STYLE}">Add a daily training reminder to my calendar ${ARROW}</button>
+    <button data-act="ics" style="${OUT_STYLE}">Add a daily 5pm reminder to my calendar (open the file once) ${ARROW}</button>
     <div class="stack" style="gap:10px"><span class="eyebrow">Quick links</span>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
         <button data-act="tab" data-v="path" style="${QL_STYLE}">Level map <span aria-hidden="true" style="font-size:1.4em">${ARROW}</span></button>
@@ -2762,7 +2764,13 @@ function applyAgeContent(){Object.entries(YOUNG).forEach(([id,o])=>{const c=byId
 const band=()=>S.age<=9?"kid":S.age<=11?"junior":S.age<=14?"teen":"senior";
 /* ---------- less text on player screens; parent content moves to Parents ---------- */
 const stripSec=(h,marker)=>{const i=h.indexOf(marker);if(i<0)return h;const s=h.lastIndexOf('<section',i),e=h.indexOf('</section>',i);return s<0||e<0?h:h.slice(0,s)+h.slice(e+10)};
-function viewMe(){let h=viewMe3();h=stripSec(h,"For parents and coaches");return h}
+function viewMe(){
+  let h=viewMe3();h=stripSec(h,"For parents and coaches");
+  // Ages 8 to 11: keep the Progress screen to the scores and skills; parent and coach detail stays out of the way.
+  if(band()==="kid"||band()==="junior")["Corner check-in","Coach rating","Mindset check","Where do you play now?","Your four corners"].forEach(m=>{h=stripSec(h,m)});
+  if(isChild())h+=childSignOutBlock();
+  return h;
+}
 function viewPath(){let h=viewPath3();h=stripSec(h,"Where the numbers come from");
   h=h.replace(/<p class="small">Based on your best score in[\s\S]*?<\/p>/,'<p class="small">Level is about more than tests. Your coach\'s view and your attitude count too.</p>');
   h=h.replace(/<p class="small" style="margin-top:12px">Sprint targets come from[\s\S]*?<\/p>/,'<p class="small" style="margin-top:12px">Targets are set for your age. Sprint targets come from research; the others are coaching targets.</p>');
@@ -3767,6 +3775,22 @@ function weekSummary(){
 }
 const _pushStateRaw=pushState;
 pushState=async function(){if(S.nick)S.summary=weekSummary();return _pushStateRaw()};
+
+/* ---- children: sign out, so the next child on this device can sign in with their own code ---- */
+function isChild(){return sessKind()==="child"}
+function childSignOutBlock(){
+  return `<section class="sec"><div class="wrap" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><p class="small">Not ${esc(S.nick)}? Sign out so the next player can sign in with their own code.</p><button class="more" data-act="child-signout">Sign out</button></div></section>`;
+}
+async function childSignOut(){
+  clearTimeout(pushTimer);
+  try{await pushState()}catch(e){}
+  sessSet(null);setKind("");
+  try{localStorage.removeItem(PLAYER_KEY);localStorage.removeItem(KEY)}catch(e){}
+  S=fresh();CHILD_INFO=null;ACCT=null;gateOpen=true;gateMode=null;
+  gateMsg="You're signed out. The next player can sign in with their own code.";
+  view="home";render();window.scrollTo(0,0);
+}
+document.addEventListener("click",e=>{if(e.target.closest('[data-act="child-signout"]'))childSignOut()});
 
 captureSession();booted=true;render();loadAfterBoot();
 </script>
