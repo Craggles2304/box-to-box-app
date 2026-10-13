@@ -1459,7 +1459,7 @@ function viewToday(){
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
         <button data-act="tab" data-v="path" style="${QL_STYLE}">Level map <span aria-hidden="true" style="font-size:1.4em">${ARROW}</span></button>
         <button data-act="tab" data-v="journal" style="${QL_STYLE}">Journal <span aria-hidden="true" style="font-size:1.4em">${ARROW}</span></button>
-        <button data-act="tab" data-v="fuel" style="${QL_STYLE}">Nutrition <span aria-hidden="true" style="font-size:1.4em">${ARROW}</span></button>
+        ${simpleMode()?"":`<button data-act="tab" data-v="fuel" style="${QL_STYLE}">Nutrition <span aria-hidden="true" style="font-size:1.4em">${ARROW}</span></button>`}
       </div></div>
   </div></div></section>`;
 }
@@ -2767,8 +2767,13 @@ const stripSec=(h,marker)=>{const i=h.indexOf(marker);if(i<0)return h;const s=h.
 function viewMe(){
   let h=viewMe3();h=stripSec(h,"For parents and coaches");
   // Ages 8 to 11: keep the Progress screen to the scores and skills; parent and coach detail stays out of the way.
-  if(band()==="kid"||band()==="junior")["Corner check-in","Coach rating","Mindset check","Where do you play now?","Your four corners"].forEach(m=>{h=stripSec(h,m)});
+  if(simpleMode()){
+    ["Corner check-in","Coach rating","Mindset check","Where do you play now?","Your four corners"].forEach(m=>{h=stripSec(h,m)});
+    h=stripSec(h,"<h2>Badges</h2>");
+    h+=simpleBadges();
+  }
   if(isChild())h+=childSignOutBlock();
+  h+=viewModeBlock();
   return h;
 }
 function viewPath(){let h=viewPath3();h=stripSec(h,"Where the numbers come from");
@@ -3778,6 +3783,27 @@ pushState=async function(){if(S.nick)S.summary=weekSummary();return _pushStateRa
 
 /* ---- children: sign out, so the next child on this device can sign in with their own code ---- */
 function isChild(){return sessKind()==="child"}
+/* Simple view: ages 8 to 11 by default, full view from 12. Anyone can switch from the Progress screen. */
+function simpleMode(){
+  if(S.viewMode==="simple")return true;
+  if(S.viewMode==="full")return false;
+  return band()==="kid"||band()==="junior";
+}
+function viewModeBlock(){
+  const simple=simpleMode();
+  return `<section class="sec"><div class="wrap" style="display:flex;flex-direction:column;gap:10px;align-items:flex-start"><p class="small">${simple?"You're on the simple view. It shows your three challenges, your streak and your next badge.":"You're on the full view. It shows everything in the app."}</p><button class="more" data-act="mode-toggle">${simple?"Show the full app":"Back to the simple view"}</button></div></section>`;
+}
+function simpleBadges(){
+  const earned=BADGES.filter(b=>S.badges.includes(b.id));
+  const next=BADGES.filter(b=>!S.badges.includes(b.id))
+    .map(b=>{if(!b.need)return {b,c:0,t:0,pct:0};const [c,t]=b.need(S);return {b,c,t,pct:Math.min(1,c/t)}})
+    .sort((a,b)=>b.pct-a.pct).slice(0,3);
+  return `<section class="sec"><div class="wrap"><div class="stack" style="gap:12px"><span class="eyebrow">Badges · ${earned.length} of ${BADGES.length}</span>
+    ${earned.length?`<div class="row" style="gap:8px;flex-wrap:wrap">${earned.map(b=>`<span class="chip v">${esc(b.name)}</span>`).join("")}</div>`:`<p class="small">No badges yet. Your first one is close.</p>`}
+    <span class="eyebrow">Next to earn</span>
+    ${next.map(x=>`<div><b>${esc(x.b.name)}</b><br><span class="small">${esc(x.b.desc)}${x.t?` · ${x.c} of ${x.t}`:""}</span></div>`).join("")}
+  </div></div></section>`;
+}
 function childSignOutBlock(){
   return `<section class="sec"><div class="wrap" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><p class="small">Not ${esc(S.nick)}? Sign out so the next player can sign in with their own code.</p><button class="more" data-act="child-signout">Sign out</button></div></section>`;
 }
@@ -3791,6 +3817,10 @@ async function childSignOut(){
   view="home";render();window.scrollTo(0,0);
 }
 document.addEventListener("click",e=>{if(e.target.closest('[data-act="child-signout"]'))childSignOut()});
+document.addEventListener("click",e=>{
+  if(!e.target.closest('[data-act="mode-toggle"]'))return;
+  S.viewMode=simpleMode()?"full":"simple";save();render();window.scrollTo(0,0);
+});
 
 captureSession();booted=true;render();loadAfterBoot();
 </script>
