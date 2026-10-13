@@ -3817,6 +3817,17 @@ async function childSignOut(){
   view="home";render();window.scrollTo(0,0);
 }
 document.addEventListener("click",e=>{if(e.target.closest('[data-act="child-signout"]'))childSignOut()});
+/* Simple view: Train shows the three pillar tabs and this week's plan only. Full view is unchanged. */
+const _viewListFull=viewList;
+viewList=function(){
+  if(!simpleMode())return _viewListFull();
+  if(!["move","mind","ment"].includes(trainTab))trainTab="move";
+  msub="plan";trainRoute="off";
+  const P=PK[trainTab];
+  const tabs=PILLAR.map(p=>`<button data-act="ttab" data-v="${p.k}" aria-pressed="${P.k===p.k}" style="--c:${p.col}"><b>${p.n}</b></button>`).join("");
+  return `<div class="wrap"><div class="ptabs" role="group" aria-label="Training section" style="margin-top:22px;grid-template-columns:repeat(3,1fr)">${tabs.replace(/<b>/g,'<b style="white-space:normal;overflow:visible;text-overflow:clip;font-size:.8rem">')}</div>${pillarHead(P)}
+    <section class="sec"><div class="sechd"><div class="stack"><span class="eyebrow">Your plan</span><h2>This week</h2></div></div>${planBlock(P)}</section></div>`;
+};
 document.addEventListener("click",e=>{
   if(!e.target.closest('[data-act="mode-toggle"]'))return;
   S.viewMode=simpleMode()?"full":"simple";save();render();window.scrollTo(0,0);
