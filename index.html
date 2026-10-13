@@ -1454,6 +1454,7 @@ function viewToday(){
     <div class="row" style="gap:14px;flex-wrap:wrap"><span class="chip v">${ICON.flame} ${liveStreak()} day${liveStreak()===1?"":"s"} streak</span>${S.freezes?`<span class="small">${S.freezes} streak freeze${S.freezes>1?"s":""} ready to cover a missed day</span>`:""}</div>
     ${todayBlock()}
     ${nextBadgeCard()}
+    ${retestCard()}
     <button data-act="ics" style="${OUT_STYLE}">Add a daily 5pm reminder to my calendar (open the file once) ${ARROW}</button>
     <div class="stack" style="gap:10px"><span class="eyebrow">Quick links</span>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
@@ -2770,7 +2771,10 @@ function viewMe(){
   if(simpleMode()){
     ["Corner check-in","Coach rating","Mindset check","Where do you play now?","Your four corners"].forEach(m=>{h=stripSec(h,m)});
     h=stripSec(h,"<h2>Badges</h2>");
-    h+=simpleBadges();
+    h=stripSec(h,"<h2>Getting better</h2>");
+    h+=nextStepBlock()+progressSimple()+simpleBadges();
+  }else{
+    h+=nextStepBlock();
   }
   if(isChild())h+=childSignOutBlock();
   h+=viewModeBlock();
@@ -3820,6 +3824,7 @@ document.addEventListener("click",e=>{if(e.target.closest('[data-act="child-sign
 /* Simple view: Train shows the three pillar tabs and this week's plan only. Full view is unchanged. */
 const _viewListFull=viewList;
 viewList=function(){
+  if(retestId){const id=retestId;retestId=null;trainTab="move";msub=drillTab(id);openDrill=id;return _viewListFull()}
   if(!simpleMode())return _viewListFull();
   if(!["move","mind","ment"].includes(trainTab))trainTab="move";
   msub="plan";trainRoute="off";
@@ -3828,6 +3833,43 @@ viewList=function(){
   return `<div class="wrap"><div class="ptabs" role="group" aria-label="Training section" style="margin-top:22px;grid-template-columns:repeat(3,1fr)">${tabs.replace(/<b>/g,'<b style="white-space:normal;overflow:visible;text-overflow:clip;font-size:.8rem">')}</div>${pillarHead(P)}
     <section class="sec"><div class="sechd"><div class="stack"><span class="eyebrow">Your plan</span><h2>This week</h2></div></div>${planBlock(P)}</section></div>`;
 };
+/* ---- progress: before and after, re-test prompt, next step to promotion ---- */
+let retestId=null;
+const nameOf=id=>{const d=ALLDRILLS[id]||WK.find(w=>w.id===id);return d?d.t:id};
+function drillTab(id){return WK.some(w=>w.id===id)?"workouts":BASICS.some(d=>d.id===id)?"basics":"pos"}
+function retestDue(){
+  const today=dayKey();
+  return Object.keys(BM).map(id=>{const L=(S.scores||{})[id]||[];if(!L.length)return null;
+    const days=Math.round((new Date(today)-new Date(L[L.length-1].d))/864e5);return {id,days}})
+    .filter(x=>x&&x.days>=28).sort((a,b)=>b.days-a.days).slice(0,3);
+}
+function retestCard(){
+  const due=retestDue();if(!due.length)return "";
+  return `<div style="padding:16px 18px;border:1px solid var(--volt);border-radius:12px"><span class="eyebrow">Time to re-test</span>
+    <p class="small" style="margin:6px 0 8px">It's been over 4 weeks since your last test. Re-do one to see how far you've come.</p>
+    ${due.map(x=>`<button data-act="retest" data-id="${x.id}" style="display:flex;justify-content:space-between;align-items:center;width:100%;min-height:48px;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;cursor:pointer;text-align:left"><span>${esc(nameOf(x.id))}</span><span class="small">${x.days} days ago ${ARROW}</span></button>`).join("")}</div>`;
+}
+function progressSimple(){
+  const rows=Object.keys(BM).map(id=>{const L=(S.scores||{})[id]||[];if(!L.length)return null;const b=BM[id],f=L[0].v,best=dPB(id),imp=b.lower?f-best:best-f;return {id,b,f,best,imp}}).filter(r=>r&&r.imp>0);
+  if(!rows.length)return "";
+  const val=(r,v)=>fmtS(r.b,v)+(r.b.lower?"":" "+esc(r.b.unit||""));
+  return `<section class="sec" style="padding-top:20px"><div class="sechd"><div class="stack"><span class="eyebrow">Your progress</span><h2>Getting better</h2></div></div>
+    <div class="stack" style="gap:12px">${rows.map(r=>`<div style="padding:14px 16px;border:1px solid var(--line);border-radius:12px"><b>${esc(nameOf(r.id))}</b>
+      <div style="margin-top:6px">${val(r,r.f)} <span aria-hidden="true">→</span> <strong style="color:var(--volt)">${val(r,r.best)}</strong></div>
+      <div class="small" style="margin-top:4px">${r.b.lower?`${r.imp.toFixed(1)} s faster`:`${r.imp} ${esc(r.b.unit||"")} better`} since your first try</div></div>`).join("")}</div></section>`;
+}
+function nextStepBlock(){
+  const P=progInfo();let line;
+  if(P.trialDone)line="You've passed your Stage Trial. Keep training to build your next level.";
+  else if(P.trialReady)line="Your Stage Trial is ready. Pass it to move up a level.";
+  else{const left=P.ids.length-P.done,next=P.nextId&&byId[P.nextId];
+    line=`${left} more ${left===1?"session":"sessions"} to your Stage Trial.${next?` Next up: ${esc(next.t)}.`:""}`}
+  return `<section class="sec" style="padding-top:20px"><div style="padding:16px 18px;border:2px solid var(--volt);border-radius:12px"><span class="eyebrow">Next step</span><p style="margin-top:6px;font-size:1.1rem">${line}</p></div></section>`;
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest('[data-act="retest"]');if(!b)return;
+  retestId=b.dataset.id;view="challenges";render();window.scrollTo(0,0);
+});
 document.addEventListener("click",e=>{
   if(!e.target.closest('[data-act="mode-toggle"]'))return;
   S.viewMode=simpleMode()?"full":"simple";save();render();window.scrollTo(0,0);
