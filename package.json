@@ -1,0 +1,6 @@
+{
+  "name": "box-to-box-development",
+  "private": true,
+  "scripts": {"test": "node --test tests/account-flow.test.cjs"},
+  "devDependencies": {"jsdom": "30.1.1"}
+}

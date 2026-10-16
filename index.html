@@ -1104,8 +1104,8 @@ const TOPNAV=[["home","Journey"],["parents","Parents"]];
 const SUBNAV=[["challenges","Train"],["journal","Journal"],["fuel","Nutrition"],["me","Locker"]];
 function header(){
   const cur=(view==="play"||view==="mind")?"challenges":view==="done"?"home":view,st=liveStreak();
-  if(!S.nick)return `<header class="hdr"><div class="wrap">${brand()}<div class="right"><button class="btn small" data-act="jump">Sign for the club</button></div></div></header>`;
-  return `<header class="hdr"><div class="wrap">${brand()}<div class="right">${isAdmin?`<button class="chip" data-act="tab" data-v="coach" style="background:none;color:var(--volt);border-color:var(--volt)">Coach</button>`:""}<span class="chip st"><i class="fl"></i>${st}-day streak</span><span class="chip v num">${S.xp.toLocaleString()} XP</span></div></div>
+  if(!accountReady())return `<header class="hdr"><div class="wrap">${brand()}<div class="right"><button class="btn small" data-act="gate-register">Create account</button></div></div></header>`;
+  return `<header class="hdr"><div class="wrap">${brand()}<div class="right">${isAdmin?`<button class="chip" data-act="tab" data-v="coach" style="background:none;color:var(--volt);border-color:var(--volt)">Coach</button>`:""}<span class="chip st"><i class="fl"></i>${st}-day streak</span><span class="chip v num">${S.xp.toLocaleString()} XP</span><button class="more" data-act="gate-signout">Sign out</button></div></div>
   <nav class="topnav" aria-label="Main">${TOPNAV.map(([v,n])=>`<button data-act="tab" data-v="${v}" ${cur===v||(v==="home"&&["path","challenges","journal","fuel","me"].includes(cur))?'aria-current="page"':""}>${n}</button>`).join("")}</nav></header>`;
 }
 function subNav(){
@@ -1392,7 +1392,7 @@ function viewOnboard(){
    <div class="stack" style="gap:22px">
     <span class="eyebrow">Mini soccer to academy · Ages 5–18</span>
     <h1>Become <em class="v">box to box.</em></h1>
-    <p class="lead">Your coach guides you one session at a time, from mini soccer to academy. Train your mindset, mentality and movement at home, pass your Stage Trials and get promoted.</p>
+    <p class="small">Your account: ${esc(ACCT?.parent?.email||"")}</p><div><button class="more" data-act="gate-close">Back to my player</button></div><p class="lead">Your coach guides you one session at a time, from mini soccer to academy. Train your mindset, mentality and movement at home, pass your Stage Trials and get promoted.</p>
     <div class="row"><button class="btn" data-act="jump">Sign for the club ${ARROW}</button></div>
    </div>
    <div class="stadium"><div class="pitchwrap">${pitchSVG(1150)}</div></div>
@@ -1416,7 +1416,7 @@ function viewOnboard(){
       <div class="sstep"><span class="k">03</span><div><h3>Your level</h3>${levelPick(ob.age,ob.level,"lvl")}<p class="hint">${ob.age<=9?"":"Pick the level you play at now. It's about how you play, not how old you are."}</p></div></div>
       <div class="sstep"><span class="k">04</span><div><h3>Your colourway</h3>${swatches(ob.kit,"kit")}</div></div>
       <div class="sstep"><span class="k">05</span><div><h3>Parent or guardian</h3><label class="consent" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer"><input type="checkbox" id="consent" style="margin-top:4px;accent-color:var(--volt);width:18px;height:18px;flex:none"><span class="small">I am the parent or guardian of this player (or I am 18 or over). I have read the <button type="button" class="more" data-act="tab" data-v="privacy" style="font-size:.7rem">Privacy and terms</button> and agree that progress, scores, journal entries and any clips the player chooses to submit can be stored for the programme.</span></label><p class="hint">Under 18s need a parent or guardian to agree. You can ask for the information to be deleted at any time.</p></div></div>
-      <div style="padding-top:24px"><button class="btn" data-act="start" style="width:100%">Kick off ${ARROW}</button></div>
+      <div style="padding-top:24px"><button class="btn" data-act="start" style="width:100%">Save player and start ${ARROW}</button></div>
      </div>
     </div>
    </section>
@@ -1429,12 +1429,13 @@ function cleanNick(s){return String(s||"").replace(/[^\p{L}\p{N} ._-]/gu,"").rep
 const TABS=[["home","Today",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>'],
  ["challenges","Train",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l5 15H7z"/><path d="M4 21h16M9.5 11h5"/></svg>'],
  ["me","Progress",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'],
- ["parents","Parents",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>']];
+ ["parents","Account",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>']];
 const TAB_OF={home:"home",path:"challenges",journal:"me",fuel:"challenges",challenges:"challenges",play:"challenges",mind:"challenges",done:"home",me:"me",parents:"parents"};
 let gateOpen=false;
 function render(){
   const root=document.getElementById("app"),nav=document.getElementById("tabs");
-  if(!S.nick||gateOpen){root.innerHTML=header()+`<main>${gateMode==="player"?viewOnboard():viewGate()}</main>`;nav.hidden=true;return}
+  if(view==="privacy"){root.innerHTML=header()+`<main>${viewPrivacy()}</main>`;nav.hidden=true;return}
+  if(!accountReady()||!S.nick||gateOpen){root.innerHTML=header()+`<main>${accountReady()&&gateMode==="player"?viewOnboard():viewGate()}</main>`;nav.hidden=true;return}
   rollWeek();
   if(isChild()&&view==="parents")view="home";
   const body={home:viewToday,challenges:viewList,play:viewPlay,done:viewDone,path:viewPath,board:viewBoard,me:viewMe,coach:viewCoach,place:viewPlace,mind:viewMind,parents:viewParentsAcct,fuel:viewFuel,privacy:viewPrivacy,journal:viewDiary}[view]||viewToday;
@@ -1482,13 +1483,7 @@ document.addEventListener("click",e=>{
   else if(a==="timer"){stimer.running?stopTimer():startTimer()}
   else if(a==="treset"){resetTimer()}
   else if(a==="kit"){ob.nick=document.getElementById("nick").value;ob.age=+document.getElementById("age").value;ob.kit=+b.dataset.k;soft()}
-  else if(a==="start"){
-    const n=cleanNick(document.getElementById("nick").value),age=+document.getElementById("age").value;
-    if(!n){toast("Pick a nickname first");document.getElementById("nick").focus();return}
-    if(!document.getElementById("consent")?.checked){toast("A parent or guardian needs to tick the consent box first");document.getElementById("consent")?.focus();return}
-    S.consent={at:dayKey(),v:"draft-1"};
-    Object.assign(S,{nick:n,age,stage:age<=9?"g":(ob.level||"d"),kit:ob.kit});filterS=S.stage;save();view="home";render();window.scrollTo(0,0);sync();toast(`Welcome, ${n}`);
-  }
+  // Account-backed player creation is handled by account-flow.js.
   else if(a==="edit"){editOpen=!editOpen;delete S._ageDraft;delete S._lvlDraft;soft()}
   else if(a==="lvl"){ob.nick=document.getElementById("nick").value;ob.level=b.dataset.v;soft()}
   else if(a==="lvl2"){S._lvlDraft=b.dataset.v;soft()}
@@ -3119,17 +3114,9 @@ function viewPrivacy(){
   </section></div>`;
 }
 function viewParentsAcct(){
-  let box;
-  if(!ACCT){
-    box=`<section class="sec"><div class="stack" style="gap:12px"><span class="eyebrow">For parents and guardians</span><h2>Sign in to manage your children</h2><p class="muted">Sign in to see each child's sign-in code and set their PIN.</p><div><button class="btn" data-act="gate-open">Parent sign-in ${ARROW}</button></div></div></section>`;
-  }else{
-    const cards=(ACCT.players||[]).map(p=>`<div class="stack" style="gap:10px;padding:16px;border:1px solid var(--line)">
-        <strong>${esc(p.nickname)}</strong><span class="small muted">Age ${esc(String(p.age))} · ${p.has_pin?"PIN set":"No PIN yet"}</span>
-        <span class="small">Sign-in code</span><span style="font-family:var(--f-display);font-size:1.6rem;letter-spacing:.12em">${esc(p.login_code||"…")}</span>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><input id="pin-${esc(p.id)}" inputmode="numeric" maxlength="4" type="password" placeholder="4-number PIN" style="max-width:160px;padding:12px;font:inherit;letter-spacing:.3em"><button class="btn" data-act="pin-save" data-id="${esc(p.id)}">${p.has_pin?"Change PIN":"Save PIN"}</button></div></div>`).join("")||`<p class="muted">No children on your account yet.</p>`;
-    box=`<section class="sec"><div class="stack" style="gap:14px"><span class="eyebrow">Signed in as ${esc(ACCT.parent.email)}</span><h2>Sign-in for your children</h2><p class="muted">Your child signs in with the code and PIN below, from the front screen.</p>${cards}<div><button class="more" data-act="gate-signout">Sign out as parent</button></div></div></section>`;
-  }
-  return box+viewParents();
+  if(!accountReady())return viewGate();
+  const cards=ACCT.players.map(p=>`<div class="stack" style="gap:12px;padding:18px;border:1px solid var(--line)"><strong>${esc(p.nickname)}</strong><span class="small">Age ${esc(String(p.age))}</span><button class="btn" data-act="account-player" data-id="${esc(p.id)}">${playerId()===p.id?"Continue training":"Open player"} ${ARROW}</button></div>`).join("");
+  return `<section class="hero"><div class="wrap"><div class="stack" style="gap:18px"><span class="eyebrow">Your account</span><h1>Your <em class="v">players.</em></h1><p class="lead">${esc(ACCT.parent.email)}</p><p class="small">Sign in with this email on another device to access your saved player profiles.</p>${cards}<div class="row"><button class="btn" data-act="gate-player">Add a player</button><button class="more" data-act="gate-signout">Sign out</button></div></div></div></section>`+viewParents();
 }
 function viewParents(){
   const nk=esc(S.nick||"your child"),C=S.nick?myCorners():null,W=WEEK[S.stage],days=weekDays(),dn=days.filter(trainedOn).length,A=fivecAvg(5),R=S.placement?placement(myParts()):null;
@@ -3538,192 +3525,9 @@ const INT={
 };
 
 
-/* ---- front sign-in: parents (email link) and players (profile on this device) ---- */
-const API_BASE="https://box-to-box-api.craiigbrown2304.workers.dev";
-let gateMode=null, gateMsg="", ACCT=null;
-function sessGet(){try{return localStorage.getItem("b2b.session")}catch(e){return null}}
-function sessSet(t){try{if(t)localStorage.setItem("b2b.session",t);else localStorage.removeItem("b2b.session")}catch(e){}}
-function captureSession(){const m=location.hash.match(/session=([0-9a-f]{64})/);if(m){sessSet(m[1]);history.replaceState(null,"",location.pathname+location.search)}}
-function sessKind(){try{return localStorage.getItem("b2b.kind")}catch(e){return null}}
-function setKind(k){try{localStorage.setItem("b2b.kind",k)}catch(e){}}
-async function loadAccount(){const t=sessGet();if(!t||sessKind()==="child"){ACCT=null;return}try{const r=await fetch(API_BASE+"/api/me",{headers:{Authorization:"Bearer "+t}});if(r.status===401){sessSet(null);ACCT=null;return}ACCT=await r.json()}catch(e){ACCT=null}}
-function viewGate(){
-  let inner;
-  if(ACCT){
-    const pwBox=ACCT.parent.hasPassword?"":`<div class="stack" style="gap:10px;padding:16px;border:1px solid var(--line)">
-        <strong>Set a password</strong><p class="small">So you can sign in any time without waiting for an email.</p>
-        <input id="spw" type="password" autocomplete="new-password" placeholder="At least 8 characters" style="max-width:360px;padding:12px;font:inherit">
-        <div><button class="btn" data-act="gate-setpw">Save password</button></div></div>`;
-    inner=`<p class="lead">Signed in as <strong>${esc(ACCT.parent.email)}</strong>.</p>${pwBox}
-      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-player">Set up a player ${ARROW}</button><button class="more" data-act="gate-signout">Sign out</button></div>
-      ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
-  }else if(gateMode==="parent"){
-    inner=`<p class="lead">Sign in with your email and password.</p>
-      <label class="small" for="gemail">Email</label>
-      <input id="gemail" type="email" autocomplete="email" placeholder="you@example.com" style="max-width:360px;padding:12px;font:inherit">
-      <label class="small" for="gpw">Password</label>
-      <input id="gpw" type="password" autocomplete="current-password" style="max-width:360px;padding:12px;font:inherit">
-      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-login">Sign in ${ARROW}</button><button class="more" data-act="gate-back">Back</button></div>
-      ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}
-      <div class="stack" style="gap:8px;margin-top:8px"><p class="small">Don't have an account? <button class="more" data-act="gate-register">Create one</button></p>
-      <p class="small">Forgotten your password? <button class="more" data-act="gate-send">Email me a sign-in link</button></p></div>`;
-  }else if(gateMode==="register"){
-    inner=`<p class="lead">Create your parent account. Use an email you check, and a password you'll remember.</p>
-      <label class="small" for="rmail">Email</label>
-      <input id="rmail" type="email" autocomplete="email" placeholder="you@example.com" style="max-width:360px;padding:12px;font:inherit">
-      <label class="small" for="rpw">Password (at least 8 characters)</label>
-      <input id="rpw" type="password" autocomplete="new-password" style="max-width:360px;padding:12px;font:inherit">
-      <label class="small" for="rpw2">Type your password again</label>
-      <input id="rpw2" type="password" autocomplete="new-password" style="max-width:360px;padding:12px;font:inherit">
-      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-create">Create account ${ARROW}</button><button class="more" data-act="gate-parent">Back to sign in</button></div>
-      ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
-  }else if(gateMode==="playerlogin"){
-    inner=`<p class="lead">Type the sign-in code and PIN your parent gave you.</p>
-      <label class="small" for="ccode">Sign-in code</label>
-      <input id="ccode" autocomplete="off" autocapitalize="characters" placeholder="SAM-4Y9S" style="max-width:260px;padding:12px;font:inherit;text-transform:uppercase;letter-spacing:.12em">
-      <label class="small" for="cpin">PIN (4 numbers)</label>
-      <input id="cpin" inputmode="numeric" maxlength="4" autocomplete="off" type="password" style="max-width:160px;padding:12px;font:inherit;letter-spacing:.3em">
-      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-childsignin">Let's go ${ARROW}</button><button class="more" data-act="gate-back">Back</button></div>
-      ${gateMsg?`<p class="small" role="status">${esc(gateMsg)}</p>`:""}`;
-  }else{
-    inner=`<p class="lead">Who's signing in?</p>
-      <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn" data-act="gate-parent">I'm a parent or guardian ${ARROW}</button><button class="more" data-act="gate-playerlogin">I'm a player with a sign-in code ${ARROW}</button></div>
-      <p class="small">New to Box to Box? <button class="more" data-act="gate-player">Set up a new player</button></p>
-      ${S.nick?`<p class="small"><button class="more" data-act="gate-close">Back to the app</button></p>`:""}`;
-  }
-  return `<section class="hero"><div class="bgword" aria-hidden="true">Box to box</div><div class="wrap"><div class="stack" style="gap:22px">
-    <span class="eyebrow">Mini soccer to academy · Ages 5–18</span>
-    <h1>Sign <em class="v">in.</em></h1>${inner}</div></div></section>`;
-}
-document.addEventListener("click",async e=>{
-  const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act;
-  if(a==="gate-parent"){gateMode="parent";gateMsg="";render()}
-  else if(a==="gate-player"){gateMode="player";render()}
-  else if(a==="gate-back"){gateMode=null;gateMsg="";render()}
-  else if(a==="gate-signout"){sessSet(null);ACCT=null;gateMode=null;render()}
-  else if(a==="start"&&sessGet()&&ACCT&&S.nick){
-    try{
-      const r=await fetch(API_BASE+"/api/players",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+sessGet()},body:JSON.stringify({nickname:S.nick,age:S.age})});
-      if(r.ok){const j=await r.json().catch(()=>({}));if(j.id)setPlayerId(j.id);await loadAccount();toast(`${S.nick} is saved to your account`);pushState()}
-      else{const j=await r.json().catch(()=>({}));toast(j.error==="too_many_players"?"This account already has 5 players":"Couldn't save to your account. It's saved on this device.")}
-    }catch(err){toast("Couldn't reach the server. It's saved on this device.")}
-  }
-  else if(a==="gate-playerlogin"){gateMode="playerlogin";gateMsg="";render()}
-  else if(a==="gate-open"){gateOpen=true;gateMode=null;gateMsg="";render()}
-  else if(a==="gate-close"){gateOpen=false;gateMode=null;gateMsg="";render()}
-  else if(a==="gate-childsignin"){
-    const code=(document.getElementById("ccode")?.value||"").trim().toUpperCase(), pin=(document.getElementById("cpin")?.value||"").trim();
-    if(!code||!/^\d{4}$/.test(pin)){gateMsg="Type the code, and your 4-number PIN.";render();return}
-    gateMsg="Checking…";render();
-    try{
-      const r=await fetch(API_BASE+"/api/player/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,pin})});
-      const j=await r.json().catch(()=>({}));
-      if(r.ok&&j.token){
-        sessSet(j.token);setKind("child");setPlayerId(j.playerId);CHILD_INFO={nickname:j.nickname,age:j.age};ACCT=null;
-        await pullState(CHILD_INFO);
-        gateMsg="";gateMode=null;gateOpen=false;render();
-      }
-      else if(r.status===429){gateMsg="Too many wrong PINs. Ask your parent to help, or try again in 10 minutes.";render()}
-      else{gateMsg="That code or PIN isn't right. Check with your parent and try again.";render()}
-    }catch(err){gateMsg="Couldn't reach the server. Check your connection and try again.";render()}
-  }
-  else if(a==="pin-save"){
-    const id=b.dataset.id, pin=(document.getElementById("pin-"+id)?.value||"").trim();
-    if(!/^\d{4}$/.test(pin)){toast("A PIN is 4 numbers");return}
-    const t=sessGet();if(!t){toast("Sign in as a parent first");return}
-    try{const r=await fetch(API_BASE+"/api/players/"+id+"/pin",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify({pin})});
-      if(r.ok){toast("PIN saved. Your child can now sign in with it.");await loadAccount();render()}
-      else{toast("Couldn't save the PIN. Please try again.")}
-    }catch(err){toast("Couldn't reach the server.")}
-  }
-  else if(a==="gate-register"){gateMode="register";gateMsg="";render()}
-  else if(a==="gate-create"){
-    const em=(document.getElementById("rmail")?.value||"").trim();
-    const pw=document.getElementById("rpw")?.value||"", pw2=document.getElementById("rpw2")?.value||"";
-    if(!em){gateMsg="Type your email first.";render();return}
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){gateMsg="That email doesn't look right. Check it and try again.";render();return}
-    if(pw.length<8){gateMsg="Your password needs at least 8 characters.";render();return}
-    if(pw!==pw2){gateMsg="The two passwords don't match. Type them again.";render();return}
-    gateMsg="Creating your account…";render();
-    try{
-      const r=await fetch(API_BASE+"/api/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,password:pw})});
-      const j=await r.json().catch(()=>({}));
-      if(r.ok&&j.token){sessSet(j.token);setKind("parent");gateMsg="";gateMode=null;gateOpen=false;await afterSignIn()}
-      else if(j.error==="exists"){gateMsg="An account with this email already exists. Go back and sign in instead.";render()}
-      else{gateMsg="Something went wrong. Please try again.";render()}
-    }catch(err){gateMsg="Couldn't reach the server. Check your connection and try again.";render()}
-  }
-  else if(a==="gate-login"){
-    const em=(document.getElementById("gemail")?.value||"").trim(), pw=document.getElementById("gpw")?.value||"";
-    if(!em||!pw){gateMsg="Enter your email and password.";render();return}
-    gateMsg="Signing in…";render();
-    try{
-      const r=await fetch(API_BASE+"/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em,password:pw})});
-      const j=await r.json().catch(()=>({}));
-      if(r.ok&&j.token){sessSet(j.token);setKind("parent");gateMsg="";gateMode=null;gateOpen=false;await afterSignIn()}
-      else{gateMsg=j.error==="wrong_details"?"That email or password isn't right. Try again, or email yourself a link below.":"Something went wrong. Please try again.";render()}
-    }catch(err){gateMsg="Couldn't reach the sign-in service. Check your connection and try again.";render()}
-  }
-  else if(a==="gate-setpw"){
-    const pw=document.getElementById("spw")?.value||"";
-    if(pw.length<8){gateMsg="Use at least 8 characters.";render();return}
-    const t=sessGet();if(!t){gateMsg="Your sign-in has expired. Please sign in again.";render();return}
-    try{
-      const r=await fetch(API_BASE+"/api/auth/set-password",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify({password:pw})});
-      if(r.ok){await loadAccount();gateMsg="Password saved. Next time, sign in with your email and password."}
-      else{gateMsg="Couldn't save the password. Please try again."}
-    }catch(err){gateMsg="Couldn't reach the server. Please try again."}
-    render();
-  }
-  else if(a==="gate-send"){
-    const em=(document.getElementById("gemail")?.value||"").trim();
-    if(!em){gateMsg="Type your email in the box above first, then press this button again.";render();return}
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){gateMsg="That email doesn't look right. Check it and try again.";render();return}
-    gateMsg="Sending…";render();
-    try{const r=await fetch(API_BASE+"/api/auth/request",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:em})});
-      gateMsg=r.ok?"Check your inbox (and spam) for a sign-in link.":"Something went wrong. Please try again."}
-    catch(err){gateMsg="Couldn't reach the sign-in service. Check your connection and try again."}
-    render();
-  }
-});
-
-/* ---- keep a child's progress on their account (signed-in parents) ---- */
-const PLAYER_KEY="b2b.playerId";
-function playerId(){try{return localStorage.getItem(PLAYER_KEY)}catch(e){return null}}
-function setPlayerId(id){try{if(id)localStorage.setItem(PLAYER_KEY,id)}catch(e){}}
-let pushTimer=null;
-async function loadAfterBoot(){await afterSignIn()}
-async function pushState(){
-  const t=sessGet(),id=playerId();
-  if(!t||!id||!S.nick)return;
-  try{const r=await fetch(API_BASE+"/api/players/"+id+"/state",{method:"PUT",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify({data:S})});
-    if(r.status===401){sessSet(null);ACCT=null}}catch(e){}
-}
-function schedulePush(){if(!S.nick||!sessGet()||!playerId())return;clearTimeout(pushTimer);pushTimer=setTimeout(pushState,1200)}
-let CHILD_INFO=null;
-async function pullState(){
-  const t=sessGet(),id=playerId();
-  if(!t||!id)return;
-  try{
-    const r=await fetch(API_BASE+"/api/players/"+id+"/state",{headers:{Authorization:"Bearer "+t}});
-    if(!r.ok)return;
-    const j=await r.json();
-    if(j.data){S=Object.assign(fresh(),j.data)}
-    else{const p=CHILD_INFO||(ACCT&&ACCT.players||[]).find(x=>x.id===id);if(p){S=Object.assign(fresh(),{nick:p.nickname,age:p.age,stage:p.age<=9?"g":"d",kit:1})}else return}
-    ensure();_saveLocal();
-  }catch(e){}
-}
-async function afterSignIn(){
-  await loadAccount();
-  if(ACCT&&ACCT.players&&ACCT.players.length){
-    if(!playerId())setPlayerId(ACCT.players[0].id);
-    if(!S.nick)await pullState();
-  }
-  render();
-}
-const _saveLocal=save;
-save=function(){_saveLocal();schedulePush()};
-
+</script>
+<script src="./account-flow.js?v=20261017-1"></script>
+<script>
 /* ---- retention: next up, next badge, daily reminder, weekly summary for parents ---- */
 const OUT_STYLE=QL_STYLE.replace("background:var(--volt)","background:transparent").replace("color:var(--on-volt)","color:var(--volt)").replace("font-size:1.15rem","font-size:1rem");
 BADGES.push(
@@ -3807,16 +3611,6 @@ function simpleBadges(){
 function childSignOutBlock(){
   return `<section class="sec"><div class="wrap" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><p class="small">Not ${esc(S.nick)}? Sign out so the next player can sign in with their own code.</p><button class="more" data-act="child-signout">Sign out</button></div></section>`;
 }
-async function childSignOut(){
-  clearTimeout(pushTimer);
-  try{await pushState()}catch(e){}
-  sessSet(null);setKind("");
-  try{localStorage.removeItem(PLAYER_KEY);localStorage.removeItem(KEY)}catch(e){}
-  S=fresh();CHILD_INFO=null;ACCT=null;gateOpen=true;gateMode=null;
-  gateMsg="You're signed out. The next player can sign in with their own code.";
-  view="home";render();window.scrollTo(0,0);
-}
-document.addEventListener("click",e=>{if(e.target.closest('[data-act="child-signout"]'))childSignOut()});
 /* Simple view: Train shows the three pillar tabs and this week's plan only. Full view is unchanged. */
 const _viewListFull=viewList;
 viewList=function(){
