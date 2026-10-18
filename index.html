@@ -9,7 +9,7 @@
 <link rel="icon" href="./assets/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="./assets/logo.png">
 <link rel="preload" href="./assets/Anton.ttf" as="font" type="font/ttf" crossorigin>
-<link rel="stylesheet" href="./development.css?v=20261018-2">
+<link rel="stylesheet" href="./development.css?v=20261018-4">
 <style>
 /* Layout: pro sportswear app — jet black, volt green, ultra-condensed caps. Edge-to-edge sections split by hairlines, product-style training tiles, a broadcast-angle pitch. Single dark look by design. */
 :root{
@@ -1333,7 +1333,7 @@ function viewBoard(){
   rows.sort((a,b)=>val(b)-val(a));
   let note="";
   if(boardState==="loading")note=`<div class="notice">Loading the table…</div>`;
-  else if(boardState==="off")note=`<div class="notice">The shared table appears when you open this page signed in to Claude. Your XP is saved on this device, so nothing is lost.</div>`;
+  else if(boardState==="off")note=`<div class="notice">The shared leaderboard is not connected. Your personal progress is saved to your Development account when the save status confirms it.</div>`;
   else if(writeErr==="invalid_argument")note=`<div class="notice">Your XP can't post to the table yet. Ask your coach to share this page with you as a Contributor.</div>`;
   else if(rows.length<=1)note=`<div class="notice">You're first on the table. Share this page with your squad so they can join.</div>`;
   const podium=rows.length>=3?`<div class="podium">${[1,0,2].map(i=>{const r=rows[i];return `<div class="pod p${i+1}">${shirt(r.kit,lvl(r.xp||0).i+1,i===0?64:48)}<span class="nm">${esc(r.nick||"Player")}</span><span class="xpv num">${val(r).toLocaleString()} XP</span><div class="blk">${i+1}</div></div>`}).join("")}</div>`:"";
@@ -1381,7 +1381,7 @@ function viewMeOld(){
      <div><b>Safety</b>Use a safe space and stay nearby for movement sessions. Older players should warm up before sprints and stop if anything hurts. Check later-stage sessions suit younger players who get promoted early.</div>
      <div><b>Leaderboard and saving</b>Only nicknames are shown. Share this page with players as Contributors so their XP posts. Progress is saved on each device.</div>
     </div>
-    <div style="padding-top:20px">${confirmReset?`<div class="notice stack"><b>Reset all progress on this device?</b><p>XP, streaks, badges and programme progress go back to zero. This can't be undone.</p><div class="row"><button class="btn small" data-act="doreset">Yes, reset</button><button class="btn ghost small" data-act="reset">Keep my progress</button></div></div>`:`<button class="xlink" data-act="reset">Reset progress</button>`}</div>
+    <div style="padding-top:20px">${confirmReset?`<div class="notice stack"><b>Reset this player’s saved progress?</b><p>XP, streaks, badges and programme progress go back to zero. This resets the account copy too and cannot be undone.</p><div class="row"><button class="btn small" data-act="doreset">Yes, reset</button><button class="btn ghost small" data-act="reset">Keep my progress</button></div></div>`:`<button class="xlink" data-act="reset">Reset progress</button>`}</div>
    </section>
   </div>`;
 }
@@ -1590,7 +1590,7 @@ function viewForm(c,bar){
   if(f.status==="working")action=`<div class="working"><span class="spin" aria-hidden="true"></span><span>Coach is watching your ${f.kind==="video"?"video":"photos"}…</span><button class="btn ghost small" data-act="fstop">Stop</button></div>`;
   return bar+`<div class="wrap"><div class="stepwrap" style="max-width:1000px">
    <span class="eyebrow" style="color:${pcol(c)}">Form check · optional · +10 XP</span>
-   <h2>Film it. Get <em class="v">coached.</em></h2>
+   <h2>Watch it. Check <em class="v">your form.</em></h2>
    <div class="coach"><div class="av"><span></span></div><div><b>Coach says</b><p>Ask a grown-up to film you doing the drill for about 10 seconds. ${esc(F.film)} ${ai?"I'll look at a few moments from it and tell you how your technique looks.":"Then watch it back and tick each point you nailed."}</p></div></div>
    <div class="formgrid">
     <div class="stack" style="gap:10px">
@@ -1626,7 +1626,7 @@ function viewPlay(){
      </div>
      <div class="stack" style="gap:24px">
       <div class="block"><span class="eyebrow">You'll need</span><ul class="need">${c.need.map(x=>`<li>${esc(x)}</li>`).join("")}${hasF?`<li>A phone to film you (optional)</li>`:""}</ul></div>
-      <div class="block"><span class="eyebrow">How it works</span><p class="muted">I'll show you one step at a time. Do each step, then tap Next. Timers start when you're ready.${hasF?" At the end you can film the drill and I'll check your form.":""}</p></div>
+      <div class="block"><span class="eyebrow">How it works</span><p class="muted">I'll show you one step at a time. Do each step, then tap Next. Timers start when you're ready.${hasF?" At the end you can film the drill and check your technique against the coaching points.":""}</p></div>
       <button class="btn" data-act="step" data-d="1" style="width:100%">Let's go ${ARROW}</button>
      </div>
     </div></div>`;
@@ -3149,12 +3149,12 @@ function viewParents(){
      ${acc("kit","Home setup and safety",`<p>${HOME_KIT}</p><ul class="need"><li>Stay nearby for movement and workout sessions, especially under 12s.</li><li>Clear the space of anything breakable. Use grass or cushions for any dives.</li><li>Warm up before sprints. Stop if anything hurts.</li><li>No heading. This follows FA youth guidance.</li></ul>`)}
      ${acc("ride","The ride home",`<ul class="need"><li>Start with "I loved watching you play". Save analysis for later, if at all.</li><li>Ask, don't tell: "What did you enjoy?" "What did you learn?"</li><li>Praise effort, attitude and bouncing back, not just goals.</li><li>Leave coaching to the coach. Mixed messages make players anxious.</li></ul>`)}
      ${acc("mind","Why mentality matters",`<p>Talent alone rarely gets players to the top. Coaches who develop academy players name resilience, awareness, a professional attitude and emotional control as key to who progresses. The app trains these through the 5Cs: Commitment, Communication, Concentration, Control and Confidence.</p><p>You can help by encouraging the match journal, praising quick resets after mistakes, and keeping football fun.</p>`)}
-     ${acc("film","Filming and AI form checks",`<p>Movement sessions can end with an optional form check. A grown-up films about 10 seconds of the drill. The video stays on your device. A few still pictures are sent to Claude, the AI coach, to give technique feedback, using the account the page is open in. Only film your child doing the drill.</p>`)}
-     ${acc("data","Leaderboard, privacy and data",`<ul class="need"><li>Only nicknames appear on the leaderboard. Encourage a nickname, not a full name.</li><li>Test scores and journals are visible only to your child and their coaches.</li><li>Progress is saved on this device. Clearing browser data resets it.</li></ul>`)}
+     ${acc("film","Filming and technique checks",`<p>Movement sessions can end with an optional form check. A grown-up films about 10 seconds of the drill. The video stays on your device. Watch the clip together and use the technique checklist. Automated video analysis and individual coach reviews are not included. Only film your child doing the drill.</p>`)}
+     ${acc("data","Leaderboard, privacy and data",`<ul class="need"><li>Only nicknames appear on the leaderboard. Encourage a nickname, not a full name.</li><li>Test scores and journals are visible only to your child and their coaches.</li><li>Progress syncs to your Development account. Check the save status before changing devices; progress marked Saved on device still needs a connection to sync.</li></ul>`)}
      ${acc("res","The research behind the app",`<div class="hist">${RESEARCH.map(([t,a,u])=>`<div class="src"><b>${t}</b><p class="muted">${a}</p><a href="${u}" target="_blank" rel="noopener">Read ${ARROW}</a></div>`).join("")}</div>`)}
     </div></section>
    ${S.nick?`<section class="sec"><div class="sechd"><div class="stack"><span class="eyebrow">Settings</span><h2>Reset</h2></div></div>
-    ${confirmReset?`<div class="notice stack"><b>Reset all progress on this device?</b><p>XP, streaks, badges and plan progress go back to zero. This can't be undone.</p><div class="row"><button class="btn small" data-act="doreset">Yes, reset</button><button class="btn ghost small" data-act="reset">Keep progress</button></div></div>`:`<button class="xlink" data-act="reset">Reset progress on this device</button>`}</section>`:""}
+    ${confirmReset?`<div class="notice stack"><b>Reset this player’s saved progress?</b><p>XP, streaks, badges and plan progress go back to zero. This resets the account copy too and cannot be undone.</p><div class="row"><button class="btn small" data-act="doreset">Yes, reset</button><button class="btn ghost small" data-act="reset">Keep progress</button></div></div>`:`<button class="xlink" data-act="reset">Reset this player’s progress</button>`}</section>`:""}
   </div>`;
 }
 document.addEventListener("click",e=>{const s=e.target.closest("details.pacc > summary");if(s){const d=s.parentElement;setTimeout(()=>{parentOpen=d.open?null:null},0)}});
@@ -3613,7 +3613,7 @@ function simpleBadges(){
   </div></div></section>`;
 }
 function childSignOutBlock(){
-  return `<section class="sec"><div class="wrap" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><p class="small">Not ${esc(S.nick)}? Sign out so the next player can sign in with their own code.</p><button class="more" data-act="child-signout">Sign out</button></div></section>`;
+  return `<section class="sec"><div class="wrap" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><p class="small">Not ${esc(S.nick)}? Ask your parent or guardian to switch player from Account.</p><button class="more" data-act="child-signout">Sign out</button></div></section>`;
 }
 /* Simple view: Train shows the three pillar tabs and this week's plan only. Full view is unchanged. */
 const _viewListFull=viewList;
@@ -3633,6 +3633,7 @@ document.addEventListener("click",e=>{
 
 </script>
 <script src="./development-ui.js?v=20261018-1"></script>
+<script src="./training.js?v=20261018-4"></script>
 <script>captureSession();booted=true;render();loadAfterBoot();</script>
 </body>
 </html>
