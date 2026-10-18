@@ -12,6 +12,7 @@ body h3{font-size:1.5rem}
 body .wrap{max-width:1180px;padding-inline:clamp(18px,4vw,44px)}
 body .hdr{top:0;background:#080a08f5}
 body .hdr .wrap{height:82px}
+body .hdr .btn{color:var(--on-volt)}
 body .brand{gap:12px;font:400 1.18rem/1.1 var(--f-display);letter-spacing:.04em}
 .brand-logo{width:52px;height:47px;object-fit:contain;flex:none}
 body .brand small{font:700 .64rem/1.2 B2BCondensed,Arial,sans-serif;letter-spacing:.18em;color:var(--muted);margin-top:5px}
