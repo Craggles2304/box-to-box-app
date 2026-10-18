@@ -68,8 +68,9 @@ async function pullState(id=playerId(),epoch=authEpoch){
   resetActivePlayer();setPlayerId(id);
   S=Object.assign(fresh(),{nick:p.nickname,age:p.age,stage:p.age<=9?"g":"d",kit:1},data);
   // A malformed old backup must not leave a valid account stuck on a blank screen.
-  S.nick=cleanNick(S.nick)||p.nickname;S.age=p.age;
-  if(!STAGES[S.stage])S.stage=p.age<=9?"g":"d";
+  S.nick=cleanNick(S.nick)||p.nickname;
+  if(!Number.isInteger(S.age)||S.age<5||S.age>18)S.age=p.age;
+  if(!STAGES[S.stage])S.stage=S.age<=9?"g":"d";
   for(const key of ["log","badges"])if(!Array.isArray(S[key]))S[key]=[];
   S.log=S.log.filter(x=>x&&typeof x==="object"&&typeof x.id==="string");
   for(const key of ["done","ever"])if(!S[key]||typeof S[key]!=="object"||Array.isArray(S[key]))S[key]={};

@@ -112,6 +112,10 @@ test('old malformed progress loads as a usable player profile',async()=>{
   const c=start({stored:{'b2b.session':'valid','b2b.kind':'parent'},fetcher:(p,o)=>p.endsWith('/state')&&o.method!=='PUT'?{status:200,body:{data:{log:null,badges:{},done:null,ever:null,stage:'missing',week:null,xp:'bad'}}}:signedInApi(p,o)});
   await pause();assert.equal(c.w.eval('accountReady()'),true);assert.equal(c.w.eval('S.xp'),0);assert.ok(c.w.document.querySelector('.development-home'));assert.deepEqual(c.errors,[]);c.close();
 });
+test('saved profile edits survive signing in again',async()=>{
+  const c=start({stored:{'b2b.session':'valid','b2b.kind':'parent'},fetcher:(p,o)=>p.endsWith('/state')&&o.method!=='PUT'?{status:200,body:{data:{nick:'Rocket R',age:11,stage:'y',xp:350}}}:signedInApi(p,o)});
+  await pause();assert.equal(c.w.eval('S.nick'),'Rocket R');assert.equal(c.w.eval('S.age'),11);assert.equal(c.w.eval('S.stage'),'y');assert.ok(c.w.document.querySelector('.development-home'));assert.deepEqual(c.errors,[]);c.close();
+});
 test('password visibility and mismatch validation keep a usable form',async()=>{
   const c=start();await pause();click(c,'[data-act="gate-register"]');
   const form=c.w.document.querySelector('#account-form');form.elements.email.value='parent@example.invalid';form.elements.password.value='password-one';form.elements.confirm.value='password-two';
