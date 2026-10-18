@@ -1,11 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-GB">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Box to Box</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080a08">
+<meta name="description" content="Your Box to Box player development hub. Train your movement, mindset and mentality, follow your plan and see your progress.">
+<title>Box to Box | Player Development</title>
+<link rel="icon" href="./assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="./assets/logo.png">
+<link rel="preload" href="./assets/Anton.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="./development.css?v=20261018-1">
 <style>
 /* Layout: pro sportswear app — jet black, volt green, ultra-condensed caps. Edge-to-edge sections split by hairlines, product-style training tiles, a broadcast-angle pitch. Single dark look by design. */
 :root{
@@ -3526,7 +3530,7 @@ const INT={
 
 
 </script>
-<script src="./account-flow.js?v=20261017-1"></script>
+<script src="./account-flow.js?v=20261018-2"></script>
 <script>
 /* ---- retention: next up, next badge, daily reminder, weekly summary for parents ---- */
 const OUT_STYLE=QL_STYLE.replace("background:var(--volt)","background:transparent").replace("color:var(--on-volt)","color:var(--volt)").replace("font-size:1.15rem","font-size:1rem");
@@ -3627,7 +3631,8 @@ document.addEventListener("click",e=>{
   S.viewMode=simpleMode()?"full":"simple";save();render();window.scrollTo(0,0);
 });
 
-captureSession();booted=true;render();loadAfterBoot();
 </script>
+<script src="./development-ui.js?v=20261018-1"></script>
+<script>captureSession();booted=true;render();loadAfterBoot();</script>
 </body>
 </html>

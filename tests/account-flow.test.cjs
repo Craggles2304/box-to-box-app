@@ -5,7 +5,10 @@ const path=require('node:path');
 const {JSDOM,VirtualConsole}=require('jsdom');
 const root=path.resolve(__dirname,'..');
 const auth=fs.readFileSync(path.join(root,'account-flow.js'),'utf8');
-const html=fs.readFileSync(path.join(root,'index.html'),'utf8').replace(/<script src="\.\/account-flow\.js[^\"]*"><\/script>/,()=>'<script>'+auth+'</script>');
+const ui=fs.readFileSync(path.join(root,'development-ui.js'),'utf8');
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8')
+  .replace(/<script src="\.\/account-flow\.js[^\"]*"><\/script>/,()=>'<script>'+auth+'</script>')
+  .replace(/<script src="\.\/development-ui\.js[^\"]*"><\/script>/,()=>'<script>'+ui+'</script>');
 const pause=()=>new Promise(r=>setTimeout(r,25));
 const profile={id:'player-a',nickname:'Rocket',age:10};
 function start({stored={},fetcher}={}){
@@ -92,4 +95,58 @@ test('switching players loads the selected account profile, without reusing the 
     return signedInApi(p,o);
   }});
   await pause();click(c,'#tabs [data-v="parents"]');click(c,'[data-act="account-player"][data-id="player-b"]');await pause();assert.equal(c.w.eval('S.nick'),'Blaze');assert.equal(c.w.eval('S.xp'),0);assert.equal(c.w.eval('S.stage'),'g');assert.equal(c.w.localStorage.getItem('b2b.playerId'),'player-b');assert.deepEqual(c.errors,[]);c.close();
+});
+test('refreshed Today screen opens every pillar and an unlocked training session',async()=>{
+  const c=start({stored:{'b2b.session':'valid','b2b.kind':'parent'},fetcher:signedInApi});await pause();
+  assert.match(c.w.document.querySelector('main').textContent,/Your next level/);
+  assert.ok(c.w.document.querySelector('.brand-logo'));
+  for(const p of ['move','mind','ment']){
+    click(c,`[data-act="dashboard-pillar"][data-v="${p}"]`);assert.equal(c.w.eval('view'),'challenges');assert.equal(c.w.eval('trainTab'),p);
+    assert.ok(c.w.document.querySelector('main button[data-act="open"]'));
+    click(c,'#tabs [data-v="home"]');
+  }
+  click(c,'.development-home .hero [data-act="open"]');assert.equal(c.w.eval('view'),'play');assert.ok(c.w.document.querySelector('main').textContent.length>300);
+  assert.deepEqual(c.errors,[]);c.close();
+});
+test('old malformed progress loads as a usable player profile',async()=>{
+  const c=start({stored:{'b2b.session':'valid','b2b.kind':'parent'},fetcher:(p,o)=>p.endsWith('/state')&&o.method!=='PUT'?{status:200,body:{data:{log:null,badges:{},done:null,ever:null,stage:'missing',week:null,xp:'bad'}}}:signedInApi(p,o)});
+  await pause();assert.equal(c.w.eval('accountReady()'),true);assert.equal(c.w.eval('S.xp'),0);assert.ok(c.w.document.querySelector('.development-home'));assert.deepEqual(c.errors,[]);c.close();
+});
+test('password visibility and mismatch validation keep a usable form',async()=>{
+  const c=start();await pause();click(c,'[data-act="gate-register"]');
+  const form=c.w.document.querySelector('#account-form');form.elements.email.value='parent@example.invalid';form.elements.password.value='password-one';form.elements.confirm.value='password-two';
+  click(c,'[data-act="gate-password-visibility"]');assert.equal(form.elements.password.type,'text');
+  form.dispatchEvent(new c.w.Event('submit',{bubbles:true,cancelable:true}));
+  assert.match(c.w.document.querySelector('#account-status').textContent,/don't match/);assert.equal(form.elements.email.value,'parent@example.invalid');assert.equal(form.elements.password.value,'password-one');assert.equal(c.calls.length,0);assert.deepEqual(c.errors,[]);c.close();
+});
+test('failed saves preserve local progress and reconnect retries it',async()=>{
+  let offline=true;
+  const c=start({stored:{'b2b.session':'valid','b2b.kind':'parent'},fetcher:(p,o)=>p.endsWith('/state')&&o.method==='PUT'&&offline?{status:503,body:{error:'unavailable'}}:signedInApi(p,o)});
+  await pause();c.w.eval('S.xp=500;save()');await c.w.eval('pushState()');
+  assert.equal(c.w.eval('syncState'),'offline');assert.match(c.w.localStorage.getItem('b2b.pending.player-a'),/500/);
+  offline=false;c.w.dispatchEvent(new c.w.Event('online'));await pause();
+  assert.equal(c.w.eval('syncState'),'saved');assert.equal(c.w.localStorage.getItem('b2b.pending.player-a'),null);assert.deepEqual(c.errors,[]);c.close();
+});
+test('state writes stay ordered and an older save cannot erase newer pending work',async()=>{
+  let resolveFirst,writes=0;
+  const c=start({stored:{'b2b.session':'valid','b2b.kind':'parent'},fetcher:(p,o)=>{
+    if(p.endsWith('/state')&&o.method==='PUT'){
+      writes++;if(writes===1)return new Promise(r=>resolveFirst=r);
+      return {status:200,body:{ok:true}};
+    }return signedInApi(p,o);
+  }});
+  await pause();c.w.eval('S.xp=400;save()');const first=c.w.eval('pushState()');await pause();
+  c.w.eval('S.xp=600;save()');const second=c.w.eval('pushState()');await pause();assert.equal(writes,1);
+  resolveFirst({status:200,body:{ok:true}});await first;await second;
+  assert.equal(writes,2);assert.deepEqual(c.calls.filter(x=>x.method==='PUT').map(x=>x.body.data.xp),[400,600]);assert.equal(c.w.localStorage.getItem('b2b.pending.player-a'),null);assert.deepEqual(c.errors,[]);c.close();
+});
+test('a signed-in player can finish a session, earn XP and save the result',async()=>{
+  const c=start({stored:{'b2b.session':'valid','b2b.kind':'parent'},fetcher:signedInApi});await pause();
+  const id=c.w.eval('planInfo("mind").nextId'),steps=c.w.eval(`byId[${JSON.stringify(id)}].steps.length`);
+  click(c,'[data-act="dashboard-pillar"][data-v="mind"]');click(c,`[data-act="open"][data-id="${id}"]`);
+  click(c,'[data-act="step"][data-d="1"]');assert.ok(c.w.document.querySelector('.stepwrap'),'The first training step must render after account loading');
+  for(let i=0;i<steps;i++)click(c,'[data-act="step"][data-d="1"]');
+  click(c,'[data-act="feel"][data-v="great"]');click(c,'[data-act="complete"]');
+  assert.equal(c.w.eval('view'),'done');assert.ok(c.w.eval('S.xp')>250);assert.equal(c.w.eval(`S.ever[${JSON.stringify(id)}]`),true);
+  await c.w.eval('pushState()');const write=c.calls.filter(x=>x.method==='PUT').at(-1);assert.ok(write.body.data.log.some(x=>x.id===id));assert.deepEqual(c.errors,[]);c.close();
 });
