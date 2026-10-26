@@ -45,3 +45,19 @@ test('leader approval calls only the guarded RPC, never direct table updates',as
   assert.match(root.status.textContent,/Approved 60-minute/);
   stop();
 });
+
+test('default Team Session DNA view shows the 60-minute preview before full edit form',async()=>{
+  const root=new FakeElement(),stop=mountTeamSessionDNA({root,supabase:app('coach',[sample]),groupId:'U13'});await tick();
+  const aboveEditor=root.html.split('<details class="btb-team-edit">')[0];
+  assert.match(aboveEditor,/Today's focus/);
+  assert.match(aboveEditor,/Active ball mastery/);
+  assert.doesNotMatch(aboveEditor,/<fieldset/);
+  assert.match(root.html,/Review & approve this plan/);
+  stop();
+});
+
+test('past Team Session DNA plans are collapsed under history',async()=>{
+ const old={...sample,id:'00000000-0000-4000-8000-000000000099',week_of:'2026-10-19',status:'approved'};
+ const root=new FakeElement(),stop=mountTeamSessionDNA({root,supabase:app('coach',[sample,old]),groupId:'U13'});await tick();
+ assert.match(root.html,/<details class="btb-team-history">/);assert.match(root.html,/Older training plans/);stop();
+});
