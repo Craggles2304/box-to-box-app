@@ -1,0 +1,25 @@
+/* Box to Box matchday UX — one action, mobile first */
+.btb-matchday-quick{font:inherit;color:#f5f9f6;max-width:900px}
+.btb-matchday-quick .btb-mq-shell{border:1px solid #244d3c;border-radius:18px;background:#0e1b17;padding:clamp(16px,4vw,24px)}
+.btb-matchday-quick header small{letter-spacing:.1em;color:#a5fb78;font-weight:750;font-size:.77rem}
+.btb-matchday-quick header h2{font-size:clamp(1.3rem,3.2vw,1.9rem);margin:.3em 0 .8em}
+.btb-matchday-quick .btb-mq-meta{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
+.btb-matchday-quick .btb-mq-meta span{font-size:.85rem;border:1px solid #356b50;border-radius:100px;padding:5px 10px}
+.btb-matchday-quick h3{font-size:1.2rem;margin:0 0 .5rem}
+.btb-matchday-quick .btb-mq-focus{line-height:1.55;margin:.2rem 0 1rem}
+.btb-matchday-quick .btb-mq-tactics{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:#162921;border-radius:12px;padding:1rem;margin-bottom:1rem}
+.btb-matchday-quick .btb-mq-tactics small{display:block;color:#c3ccc4;margin-top:.3rem}
+.btb-matchday-quick button{background:#c2fc79;color:#132512;border:0;border-radius:12px;min-height:44px;padding:.7rem 1rem;font-weight:800;cursor:pointer}
+.btb-matchday-quick button:disabled{opacity:.5;cursor:not-allowed}
+.btb-matchday-quick button:focus-visible,.btb-matchday-quick select:focus-visible,.btb-matchday-quick textarea:focus-visible{outline:3px solid #d6ff8d;outline-offset:3px}
+.btb-matchday-quick details{border:1px solid #2c6144;border-radius:10px;padding:1rem;margin-bottom:1rem}
+.btb-matchday-quick summary{cursor:pointer;font-weight:700}
+.btb-matchday-quick form{display:grid;gap:.9rem}
+.btb-matchday-quick form label{display:grid;gap:.4rem;font-weight:750}
+.btb-matchday-quick form select,.btb-matchday-quick form textarea{font:inherit;font-size:16px;background:#101e18;color:#f9fff8;border:1px solid #508767;border-radius:10px;padding:.8rem;width:100%;box-sizing:border-box}
+.btb-matchday-quick form textarea{min-height:82px;resize:vertical}
+.btb-matchday-quick .btb-mq-check{display:flex;align-items:center;gap:.7rem;font-size:.88rem;line-height:1.35;font-weight:500}
+.btb-matchday-quick .btb-mq-check input{width:21px;height:21px;accent-color:#c2fc79}
+.btb-matchday-quick .btb-mq-tip{font-size:.9rem;color:#c5d9c7}
+.btb-matchday-quick .btb-mq-error{color:#f4bbba}
+@media(max-width:460px){.btb-matchday-quick .btb-mq-tactics{flex-direction:column;align-items:stretch}.btb-matchday-quick button{width:100%}}
