@@ -5,3 +5,11 @@
 .btb-home-go,.btb-home-team button{background:var(--volt);color:#0b1709;min-height:46px;border:0;border-radius:10px;padding:11px 16px;font-weight:850;cursor:pointer;font:inherit}.btb-home-team button{white-space:nowrap}.btb-coach-home button:focus-visible,.btb-coach-home summary:focus-visible{outline:3px solid var(--volt);outline-offset:3px}.btb-home-team{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--stroke)}.btb-home-team:last-child{border:0}.btb-home-team b,.btb-home-team small{display:block}.btb-home-team small{color:var(--muted);margin-top:5px}.btb-home-empty,.btb-home-note{color:var(--muted)}.btb-home-more{padding:15px;border:1px solid var(--stroke);border-radius:13px}.btb-home-more>summary{cursor:pointer;color:var(--volt);font-weight:850}.btb-home-more>summary small{color:var(--muted);font-weight:400}.btb-home-more .btb-home-task{margin:15px 0;border-bottom:1px solid var(--stroke)}.btb-home-error{border-color:#be5b4e;color:#ffcfbe}
 @media(max-width:620px){.btb-home-team{align-items:stretch;flex-direction:column}.btb-home-team button,.btb-home-go{width:100%;text-align:center}}
 @media(prefers-reduced-motion:reduce){.btb-coach-home *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* V6: two large shortcuts, no extra dashboard clutter. */
+.btb-home-shortcuts .btb-home-shortcut-grid{display:flex;gap:9px;flex-wrap:wrap;align-items:end}
+.btb-home-shortcuts .btb-home-shortcut-grid label{font-size:.84rem;font-weight:700;color:#456553}
+.btb-home-shortcuts select{display:block;margin-top:6px;min-height:44px;padding:8px;background:white;border:1px solid #a7b7ab;border-radius:9px;font:inherit;font-size:16px;min-width:100px}
+.btb-home-shortcuts button{min-height:48px;border:0;background:#d9ff28;color:#1a3925;font-weight:800;border-radius:10px;padding:11px 17px;cursor:pointer}
+.btb-home-shortcuts p{font-size:.84rem;color:#66776a;margin:12px 0 0}
+.btb-home-shortcuts button:focus-visible{outline:3px solid #2a6a44;outline-offset:2px}

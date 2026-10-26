@@ -43,3 +43,17 @@ test('calls host app navigation callbacks rather than inventing a route',async()
  assert.deepEqual(opened,[uuid,'U13']);close();
 });
 test('rejects a missing signed-in Supabase client',()=>assert.throws(()=>mountCoachHome({root:new FakeElement(),supabase:{},onOpenPlayer(){},onOpenGroup(){}}),/signed-in Supabase/));
+test('one-tap tactics and genuine parent updates use assigned group callbacks', async()=>{
+ const el=new FakeElement(),sb=client('coach'),calls=[];
+ const stop=mountCoachHome({root:el,supabase:sb,onOpenPlayer(){},onOpenGroup(){},onOpenTactics:g=>calls.push(['tactics',g]),onOpenFamilyUpdates:g=>calls.push(['family',g])});
+ await tick();
+ assert.match(el.html,/QUICK COACH ACTIONS/);
+ assert.match(el.html,/Tactics board/);
+ assert.match(el.html,/Parent update/);
+ const target={dataset:{btbQuick:'tactics'}};el.activeNode=target;
+ el.eventHandlers.click({target:{closest:selector=>selector==='[data-btb-quick]'?target:null}});
+ const next={dataset:{btbQuick:'parents'}};el.activeNode=next;
+ el.eventHandlers.click({target:{closest:selector=>selector==='[data-btb-quick]'?next:null}});
+ assert.deepEqual(calls,[['tactics','U13'],['family','U13']]);
+ stop();
+});
