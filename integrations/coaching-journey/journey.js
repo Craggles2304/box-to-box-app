@@ -37,7 +37,7 @@ function badge(value) {return `<span class="btb-badge">${esc(value)}</span>`;}
 export function mountPlayerJourney({root,supabase,playerId}) {
   if (!(root instanceof Element)) throw new TypeError('root must be a DOM element');
   if (!supabase?.auth?.getUser || !supabase?.from || !supabase?.rpc) throw new TypeError('Provide your existing supabase-js v2 client');
-  if (typeof playerId !== 'string' || !/^[0-9a-f-]{36}$/i.test(playerId)) throw new Error('Valid playerId required');
+  if (typeof playerId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(playerId)) throw new Error('Valid playerId required');
   let closed=false, busy=false, current=null, name='', focused=null;
   root.classList.add('btb-journey');
   root.innerHTML='<div class="btb-panel" role="status">Loading Player Journey…</div>';
@@ -45,10 +45,10 @@ export function mountPlayerJourney({root,supabase,playerId}) {
     const s=$(root,'[data-journey-status]');
     if(s){s.textContent=text;s.setAttribute('role',problem?'alert':'status');s.classList.toggle('btb-error',problem);}
   };
-  const run=async (fn)=>{
+  const run=async (fn,success='Changes saved.')=>{
     if(closed||busy) return;
     busy=true;root.setAttribute('aria-busy','true');
-    try{await fn(); if(!closed) await draw();}
+    try{await fn(); if(!closed){await draw();status(success);}}
     catch(e){if(!closed)status(errText(e),true)}
     finally{busy=false;root.removeAttribute('aria-busy')}
   };
@@ -99,13 +99,14 @@ export function mountPlayerJourney({root,supabase,playerId}) {
     <div class="btb-grid">${suggestions.map(s=>`<article class="btb-review"><b>${esc(map.get(s.mission_code)?.title||s.mission_code)}</b><p>${esc(map.get(s.mission_code)?.task||'')}</p><button class="btb-btn" data-action="accept-mission" data-id="${esc(s.id)}">Assign mission</button></article>`).join('')||empty('No suggested missions.')}</div>
     ${missions.filter(m=>m.status!=='coach_verified').map(m=>`<form class="btb-review" data-form="verify-mission" data-id="${esc(m.id)}"><b>${esc(map.get(m.mission_code)?.title||m.mission_code)}</b><label>Coach observation / evidence<textarea required minlength="10" maxlength="420" name="evidence" rows="2"></textarea></label><button class="btb-btn">Verify mission evidence</button></form>`).join('')}`);
   }
-  function parentView(updates,home,missions,catalog,groups,existingInterest,targets,plans) {
+  function parentView(updates,home,missions,catalog,groups,existingInterest,targets,plans,reflections) {
     const map=new Map(catalog.map(c=>[c.code,c]));const interested=new Set(existingInterest.map(x=>x.group_id));
+    const reflectionDates=new Map((reflections||[]).map(x=>[x.challenge_id,x.created_at]));
     const xp=missions.filter(m=>m.status==='coach_verified').reduce((sum,m)=>sum+(Number(map.get(m.mission_code)?.xp_points)||0),0);
     const corners=heading('Your child’s development',`<p class="btb-intro">Progress is based on your child's coaching journey, not comparisons with other children.</p><div class="btb-grid">${FOUR_CORNERS.map(c=>{
       const row=targets.find(r=>r.corner===c);return `<div class="btb-corner"><b>${CORNERS[c][0]}</b><p>${esc(row?.target_text||'Coach target to be agreed')}</p>${badge(row?.evidence_status?.replaceAll('_',' ')||'Not set')}</div>`;}).join('')}</div>`);
     const feed=heading('Approved coach updates',updates.length?updates.map(u=>`<article class="btb-review"><small>${date(u.published_at)}</small><p>${esc(u.approved_text)}</p><div class="btb-home">🏠 <b>Try at home:</b> ${esc(u.home_activity)}</div></article>`).join(''):empty('Your coach has not approved an update yet.'));
-    const challenges=heading('Home challenges',home.length?home.map(c=>`<article class="btb-review"><p>${esc(c.challenge_text)}</p><form data-form="reflection" data-challenge="${esc(c.id)}"><label>How did it go? (Optional)<textarea maxlength="320" minlength="2" rows="2" name="reflection" required></textarea></label><button class="btb-btn btb-outline">Share reflection</button></form></article>`).join(''):empty('Your next optional challenge will appear after an approved coach update.'));
+    const challenges=heading('Home challenges',home.length?home.map(c=>`<article class="btb-review"><p>${esc(c.challenge_text)}</p>${reflectionDates.has(c.id)?`<div class="btb-done">✓ Reflection shared ${date(reflectionDates.get(c.id))}</div>`:`<form data-form="reflection" data-challenge="${esc(c.id)}"><label>How did it go? (Optional)<textarea maxlength="320" minlength="2" rows="2" name="reflection" required></textarea></label><button class="btb-btn btb-outline">Share reflection</button></form>`}</article>`).join(''):empty('Your next optional challenge will appear after an approved coach update.'));
     const missionPanel=heading('My football missions',`<p class="btb-intro">${xp} personal XP earned through coach-verified learning.</p>${missions.length?missions.map(m=>`<article class="btb-review"><div class="btb-top"><b>${esc(map.get(m.mission_code)?.title||m.mission_code)}</b>${badge(m.status.replaceAll('_',' '))}</div><p>${esc(map.get(m.mission_code)?.task||'')}</p></article>`).join(''):empty('Your coach has not assigned a mission yet.')}`);
     const plansPanel=heading('Your coaching plan',plans.length?plans.map(p=>`<article class="btb-review"><b>${esc(p.plan_title)}</b><p>${esc(p.player_goal)}</p></article>`).join(''):empty('Your coach will share a plan when it is ready.'));
     const performance=heading('Performance Hub · Optional small groups',`<p class="btb-intro">Five-player groups, matched to development needs. Express interest only if your family would like details.</p>${groups.length?groups.map(g=>`<article class="btb-review"><b>${esc(g.group_name)}</b><p>${esc(g.session_notes||'Small-group development coaching')} · Maximum ${esc(g.capacity)} players.</p><button class="btb-btn btb-outline" data-action="interest" data-group="${esc(g.id)}" ${interested.has(g.id)?'disabled':''}>${interested.has(g.id)?'Interest registered':'Request information'}</button></article>`).join(''):empty('No Performance Hub groups are currently open.')}`);
@@ -129,8 +130,9 @@ export function mountPlayerJourney({root,supabase,playerId}) {
         Promise.resolve(supabase.from('academy_mission_catalog').select('code,title,task,xp_points').eq('active',true)).then(list),
         Promise.resolve(supabase.from('performance_hub_groups').select('id,group_name,session_notes,capacity,status').eq('status','open')).then(list),
         get('performance_hub_interest','group_id',q=>q.eq('requested_by',current.id)),
-        get('player_corner_focus','corner,target_text,evidence_status'),
-        get('player_training_recommendations','plan_title,player_goal,corner,status',q=>q.eq('status','approved').limit(10))];
+        Promise.resolve(supabase.rpc('family_four_corner_focus',{p_player:playerId})).then(list),
+        get('player_training_recommendations','plan_title,player_goal,corner,status',q=>q.eq('status','approved').limit(10)),
+        get('player_home_challenge_reflections','challenge_id,created_at',q=>q.eq('submitted_by',current.id).order('created_at',{ascending:false}).limit(100))];
     const data=await Promise.all(requests);
     if(closed) return;
     const body=staff?
@@ -142,6 +144,7 @@ export function mountPlayerJourney({root,supabase,playerId}) {
   const submit=async(ev)=>{
     const form=ev.target.closest('form[data-form]');if(!form||!root.contains(form))return;
     ev.preventDefault();const type=form.dataset.form;
+    if(type==='approve' && typeof window!=='undefined' && !window.confirm('Publish this coach-reviewed progress update to the child’s authorised family?'))return;
     await run(async()=>{
       if(['corner','approve','verify-mission'].includes(type)&&!['admin','coach'].includes(current?.role))throw new Error('Coach access required.');
       if(type==='corner'){
@@ -168,7 +171,7 @@ export function mountPlayerJourney({root,supabase,playerId}) {
         if(reflection.length<2)throw new Error('Please enter a short reflection.');
         const r=await supabase.from('player_home_challenge_reflections').insert({challenge_id:form.dataset.challenge,player_id:playerId,submitted_by:current.id,reflection});if(r.error)throw r.error;
       }
-    });
+    },type==='corner'?'Four Corner focus saved.':type==='approve'?'Approved progress update published.':type==='verify-mission'?'Mission evidence verified.':'Reflection shared.');
   };
   const click=async(ev)=>{
     const button=ev.target.closest('[data-action]');if(!button||!root.contains(button))return;
@@ -180,9 +183,11 @@ export function mountPlayerJourney({root,supabase,playerId}) {
       if(action==='reject'){
         const r=await supabase.rpc('reject_passport_parent_draft',{p_draft:button.dataset.draft});if(r.error)throw r.error;
       }else if(action==='approve-plan'){
-        if(button.dataset.owner!==current.id)throw new Error('The coach who created this plan must approve it.');
-        const r=await supabase.from('player_training_recommendations').update({status:'approved',approved_at:new Date().toISOString()})
-          .eq('id',button.dataset.plan).eq('player_id',playerId).eq('coach_id',current.id).eq('status','draft').select('id');
+        if(button.dataset.owner!==current.id && current.role!=='admin')throw new Error('The coach who created this plan must approve it.');
+        let query=supabase.from('player_training_recommendations').update({status:'approved',approved_at:new Date().toISOString()})
+          .eq('id',button.dataset.plan).eq('player_id',playerId).eq('status','draft');
+        if(current.role!=='admin')query=query.eq('coach_id',current.id);
+        const r=await query.select('id');
         if(r.error)throw r.error;if(r.data?.length!==1)throw new Error('Plan was not approved; please refresh and check permissions.');
       }else if(action==='accept-mission'){
         const r=await supabase.rpc('accept_player_mission_suggestion',{p_suggestion:button.dataset.id});if(r.error)throw r.error;
@@ -191,7 +196,7 @@ export function mountPlayerJourney({root,supabase,playerId}) {
         const r=await supabase.from('performance_hub_interest').insert({player_id:playerId,group_id:button.dataset.group,requested_by:current.id,parent_opt_in:true,status:'interested'});
         if(r.error)throw r.error;
       }
-    });
+    },action==='reject'?'Parent draft rejected.':action==='approve-plan'?'Training plan approved.':action==='accept-mission'?'Mission assigned.':'Interest registered without booking or payment.');
   };
   root.addEventListener('submit',submit);
   root.addEventListener('click',click);
