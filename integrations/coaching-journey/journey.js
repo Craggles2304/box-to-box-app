@@ -64,6 +64,11 @@ export function mountPlayerJourney({root,supabase,playerId}) {
     return list(await query);
   }
   const heading=(text,body)=>`<section class="btb-panel"><h3>${esc(text)}</h3>${body}</section>`;
+  function nextCoachActions(rows) {
+    const order={now:0,next:1,later:2};
+    const ranked=[...rows].sort((a,b)=>(order[a.priority]??9)-(order[b.priority]??9));
+    return heading('Your next coaching actions',`<p class="btb-intro">Your live development worklist, prepared by n8n from real academy records. These are administrative prompts, never grades for children.</p>${ranked.length?ranked.map(a=>`<article class="btb-review btb-coach-action"><div class="btb-top"><b>${esc(a.heading)}</b>${badge(a.priority==='now'?'Attention now':a.priority==='next'?'Next step':'When possible')}</div><p>${esc(a.next_step)}</p>${Number(a.affected_items)>1?`<small>${esc(a.affected_items)} related items</small>`:''}</article>`).join(''):empty('Nothing needs a coaching follow-up yet. The next report will appear after new evidence or targets are saved.')}`);
+  }
   function cornersForm(rows) {
     const found=Object.fromEntries(rows.map(r=>[r.corner,r]));
     return heading('The Four Corner Model',`<p class="btb-intro">One current target in each corner. Coaches choose what to work on; AI does not grade children.</p><div class="btb-grid">${FOUR_CORNERS.map(key=>{
@@ -123,7 +128,8 @@ export function mountPlayerJourney({root,supabase,playerId}) {
        get('player_training_recommendations','id,plan_title,corner,player_goal,coach_id,session_structure,coach_cues,status,created_at',q=>q.in('status',['draft','approved']).order('created_at',{ascending:false}).limit(12)),
        get('player_mission_suggestions','id,mission_code,status',q=>q.eq('status','suggested')),
        get('player_missions','id,mission_code,status'),
-       Promise.resolve(supabase.from('academy_mission_catalog').select('code,title,task,xp_points').eq('active',true)).then(list)]
+       Promise.resolve(supabase.from('academy_mission_catalog').select('code,title,task,xp_points').eq('active',true)).then(list),
+       get('academy_coach_actions','action_key,action_type,heading,next_step,affected_items,priority,first_seen_at',q=>q.eq('status','open').order('first_seen_at',{ascending:true}).limit(12))]
      : [get('passport_parent_updates','id,approved_text,home_activity,published_at',q=>q.order('published_at',{ascending:false}).limit(20)),
         get('player_home_challenges','id,challenge_text,created_at',q=>q.order('created_at',{ascending:false}).limit(12)),
         get('player_missions','id,mission_code,status'),
@@ -136,7 +142,7 @@ export function mountPlayerJourney({root,supabase,playerId}) {
     const data=await Promise.all(requests);
     if(closed) return;
     const body=staff?
-      [cornersForm(data[0]),draftsForm(data[1]),plansForm(data[2]),missionReview(data[3],data[4],data[5])].join('')
+      [nextCoachActions(data[6]),cornersForm(data[0]),draftsForm(data[1]),plansForm(data[2]),missionReview(data[3],data[4],data[5])].join('')
       : parentView(...data);
     root.innerHTML=`<div class="btb-header"><div><small>BOX TO BOX ACADEMY · PLAYER JOURNEY</small><h2>${esc(name)}</h2></div><span class="btb-role">${staff?'COACH VIEW':'FAMILY VIEW'}</span></div><div class="btb-flash" data-journey-status role="status" aria-live="polite"></div>${body}`;
     if(focused) {const node=$(root,focused);if(node)node.focus();focused=null;}
