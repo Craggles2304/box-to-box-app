@@ -315,3 +315,37 @@ Coach Home supports a third optional callback `onOpenMatchday:groupId=>existingA
 - `node --test *.test.mjs` runs 60 local mocked module tests (49 prior + 11 V7), subject to the actual test output of the installed Node version.
 - Supabase RLS/restricted grant checks and the private refresh RPC have been tested against the actual project's database. Real staff/guardian account tests, full Coaching App regression, and real n8n execution remain outstanding.
 - Do NOT deploy this integration ZIP directly to Netlify. It is not the full app and lacks the full working `index.html` and existing app bundle.
+
+
+## V8 — One Learning Moment (the 15-second coach action)
+
+**Not a complete deployable Coaching App.** This integration belongs on the EXISTING signed-in team screen.
+
+The default Coach Home now supports `onOpenQuickMoment:groupId=>existingAppOpenQuickMoment(groupId)` as an optional additional shortcut. Coaches never open n8n.
+
+```html
+<link rel="stylesheet" href="/quick-moment.css">
+<div id="coach-learning-moment"></div>
+```
+```js
+import {mountCoachQuickMoment} from '/quick-moment.js';
+const dispose = mountCoachQuickMoment({
+ root:document.getElementById('coach-learning-moment'),
+ supabase:existingSignedInSupabaseClient,
+ groupId:existingSelectedGroupId
+});
+// Dispose on route/team switch.
+```
+
+The coach picks an assigned player, Four Corner, and factual evidence stage; types **one specific observation** and optionally a next focus. Tap **Save privately**: server stores an internal coach moment. A separate **Approve & share in their app** button publishes only the coach-reviewed copy to an authenticated, linked parent via `family_player_learning_feed`. There are **no external notifications**.
+
+Supabase tables `academy_coach_moments` (staff-only private note) and `academy_parent_micro_updates` (approved family copy) are separate to prevent raw coach observations from leaking. `capture_academy_coach_moment` and `publish_academy_coach_moment` validate actual staff and player-group access on the server, not in browser role claims. `client_action_id` makes safe client retries idempotent. No youth ability score is inferred.
+
+Backend schema and role/permission checks are applied, **zero coach moments captured** so far, and the host Coaching App is **not** yet deployed with this screen. All schedules stay off until true coach/guardian sign-in tests succeed.
+
+Verify locally: `node --test *.test.mjs`. Integration UI is staged, does not include the full production `index.html`; never drag/drop this integration ZIP to Netlify.
+
+
+### V8 parent feed integration (important)
+
+The existing parent view now reads the **single RLS-checked** `family_player_learning_feed` RPC for three approved streams: individual Passport updates, approved group learning, and approved quick-coach moments. The parent view must not directly read `academy_coach_moments`; its private coach observation is intentionally not queryable by families. A separate read of previously approved Passport home activities retains their Try-at-home feature.

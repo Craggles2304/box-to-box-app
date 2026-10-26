@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {currentWeekLondon,mergeFamilyMoments,buildCoachFamilyCopy} from './parent-live.js';
+import {currentWeekLondon,mergeFamilyMoments,buildCoachFamilyCopy,verifiedFamilyTimeline} from './parent-live.js';
 
 test('London week starts on a Monday in GMT',()=>{
  assert.equal(currentWeekLondon(new Date('2026-10-26T20:03:00Z')),'2026-10-26');
@@ -43,4 +43,20 @@ test('retrospective note remains under maximum length',()=>{
 test('only up to 12 approved events appear',()=>{
  const rows=Array.from({length:50},(_,i)=>({status:'published',title:String(i),body:'update',published_at:new Date(Date.UTC(2026,9,26,0,0,i)).toISOString()}));
  assert.equal(mergeFamilyMoments(rows,[]).length,12);
+});
+
+test('quick coaching moment appears with individual family label',()=>{
+ const x=verifiedFamilyTimeline([{entry_scope:'individual',entry_kind:'coach_moment',entry_id:'test',heading:'A technical learning moment',body:'Coach verified a specific scanning example.',published_at:'2026-10-26T20:00:00Z'}]);
+ assert.equal(x.length,1);assert.equal(x[0].type,'child');assert.match(x[0].title,/technical/);
+});
+test('unsigned or incomplete family feed records never appear',()=>{
+ const x=verifiedFamilyTimeline([{entry_scope:'individual',body:'unapproved',published_at:null},{entry_scope:'private',body:'coach note',published_at:'2026-10-26T20:00:00Z'}]);
+ assert.equal(x.length,0);
+});
+test('verified family feed merges Passport, group news and micro moments newest first',()=>{
+ const rows=[{entry_scope:'team',body:'Upcoming focus',published_at:'2026-10-24T00:00:00Z'},
+  {entry_scope:'individual',entry_kind:'coach_moment',body:'Coach observed helpful scanning.',published_at:'2026-10-26T00:00:00Z'},
+  {entry_scope:'individual',entry_kind:'passport_progress',body:'Coach approved the target.',published_at:'2026-10-25T00:00:00Z'}];
+ const items=verifiedFamilyTimeline(rows);
+ assert.equal(items.length,3);assert.equal(items[0].kind,'coach_moment');assert.equal(items[2].type,'team');
 });

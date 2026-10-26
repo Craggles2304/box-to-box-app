@@ -18,7 +18,7 @@ export function pickCoachPriority(actions, groupPlans) {
   return { first:tasks[0]??null, more:tasks.slice(1), plans };
 }
 
-export function mountCoachHome({root,supabase,onOpenPlayer,onOpenGroup,onOpenTactics,onOpenFamilyUpdates,onOpenMatchday}) {
+export function mountCoachHome({root,supabase,onOpenPlayer,onOpenGroup,onOpenTactics,onOpenFamilyUpdates,onOpenMatchday,onOpenQuickMoment}) {
   if(!(root instanceof Element))throw new TypeError('A valid coach dashboard element is required.');
   if(!supabase?.auth?.getUser || !supabase?.from)throw new TypeError('Use the existing signed-in Supabase client.');
   if(typeof onOpenPlayer !== 'function' || typeof onOpenGroup !== 'function')throw new TypeError('Connect player and team navigation from the existing app.');
@@ -64,8 +64,8 @@ export function mountCoachHome({root,supabase,onOpenPlayer,onOpenGroup,onOpenTac
     }
     const first=work.first?task(work.first):'<div class="btb-home-empty">No urgent player actions. You are up to date with recorded tasks.</div>';
     const teams=work.plans.length?work.plans.map(p=>`<article class="btb-home-team"><div><b>${escapeHtml(p.group_id)} · ${escapeHtml(p.title)}</b><small>${escapeHtml(when(p.week_of))} · ${p.status==='draft'?'Needs lead approval':'Approved'}${p.evidence_basis==='baseline_discovery'?' · Baseline exploration':''}</small></div><button type="button" data-btb-open-group="${escapeHtml(p.group_id)}">View training plan →</button></article>`).join(''):'<p class="btb-home-empty">Training plans will appear here after the academy prepares them.</p>';
-    const quick = coachGroups.length&&(typeof onOpenTactics==='function'||typeof onOpenFamilyUpdates==='function'||typeof onOpenMatchday==='function')?
-      `<section class="btb-home-panel btb-home-shortcuts" aria-label="Quick coaching tools"><div class="btb-home-kicker">3 · QUICK COACH ACTIONS</div><div class="btb-home-shortcut-grid">${coachGroups.length>1?`<label>My team<select data-btb-team-select>${coachGroups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}</select></label>`:''}${typeof onOpenMatchday==='function'?'<button type="button" data-btb-quick="matchday">🏟️ Matchday — 60 sec</button>':''}${typeof onOpenTactics==='function'?'<button type="button" data-btb-quick="tactics">⚽ Tactics board</button>':''}${typeof onOpenFamilyUpdates==='function'?'<button type="button" data-btb-quick="parents">💚 Parent update</button>':''}</div><p>One training idea. One genuine family update. No extra logins.</p></section>`:'';
+    const quick = coachGroups.length&&(typeof onOpenTactics==='function'||typeof onOpenFamilyUpdates==='function'||typeof onOpenMatchday==='function'||typeof onOpenQuickMoment==='function')?
+      `<section class="btb-home-panel btb-home-shortcuts" aria-label="Quick coaching tools"><div class="btb-home-kicker">3 · QUICK COACH ACTIONS</div><div class="btb-home-shortcut-grid">${coachGroups.length>1?`<label>My team<select data-btb-team-select>${coachGroups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}</select></label>`:''}${typeof onOpenQuickMoment==='function'?'<button type="button" data-btb-quick="moment">✨ One learning moment</button>':''}${typeof onOpenMatchday==='function'?'<button type="button" data-btb-quick="matchday">🏟️ Matchday — 60 sec</button>':''}${typeof onOpenTactics==='function'?'<button type="button" data-btb-quick="tactics">⚽ Tactics board</button>':''}${typeof onOpenFamilyUpdates==='function'?'<button type="button" data-btb-quick="parents">💚 Parent update</button>':''}</div><p>One training idea. One genuine family update. No extra logins.</p></section>`:'';
     root.innerHTML=`<header class="btb-home-heading"><span>BOX TO BOX · COACH MODE</span><h2>Everything for your session. Nothing extra.</h2><p>Do one useful thing, then get back to coaching.</p><div class="btb-home-counter"><strong>${actions.length}</strong> coaching follow-ups <span>·</span> <strong>${countUrgent}</strong> urgent</div></header>
      <section class="btb-home-panel" aria-label="Your next coaching action"><div class="btb-home-kicker">1 · START HERE</div>${first}</section>
      <section class="btb-home-panel" aria-label="Your group training plans"><div class="btb-home-kicker">2 · YOUR TEAM PLAN</div>${teams}</section>
@@ -78,6 +78,7 @@ export function mountCoachHome({root,supabase,onOpenPlayer,onOpenGroup,onOpenTac
     if(quickBtn && root.contains(quickBtn)){
       const choice=root.querySelector?.('[data-btb-team-select]')?.value||coachGroups[0];
       if(!safeGroup(choice)||!coachGroups.includes(choice))return;
+      if(quickBtn.dataset.btbQuick==='moment' && typeof onOpenQuickMoment==='function')onOpenQuickMoment(choice);
       if(quickBtn.dataset.btbQuick==='matchday' && typeof onOpenMatchday==='function')onOpenMatchday(choice);
       if(quickBtn.dataset.btbQuick==='tactics' && typeof onOpenTactics==='function')onOpenTactics(choice);
       if(quickBtn.dataset.btbQuick==='parents' && typeof onOpenFamilyUpdates==='function')onOpenFamilyUpdates(choice);

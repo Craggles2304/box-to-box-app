@@ -32,23 +32,37 @@ const dateText=s=>{if(!s)return '';const d=new Date(s);return Number.isNaN(d.get
 const read=async query=>{const {data,error}=await query;if(error)throw error;return data||[];};
 
 /** Parent-side: team progress plus individual *approved* Passport progress. */
+/** Only the authenticated, RLS-enforced database union determines family visibility. */
+export function verifiedFamilyTimeline(rows) {
+  return (Array.isArray(rows)?rows:[])
+    .filter(x=>x && ['individual','team'].includes(x.entry_scope) && x.published_at && typeof x.body==='string' && x.body.trim().length>0)
+    .map(x=>({
+      type:x.entry_scope==='individual'?'child':'team',
+      id:String(x.entry_id||''),title:String(x.heading||'Coach-approved update').slice(0,160),
+      body:String(x.body).slice(0,1200),date:x.published_at,
+      kind:String(x.entry_kind||'coach_update').slice(0,50)
+    }))
+    .sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,12);
+}
+
 export function mountParentLive({root,supabase,playerId,onOpenPassport}) {
-  if(!(root instanceof Element)||!supabase?.auth?.getUser||!supabase?.from||!uuid(playerId))throw new TypeError('Signed-in parent, child ID and a valid view are required.');
+  if(!(root instanceof Element)||!supabase?.auth?.getUser||!supabase?.from||!supabase?.rpc||!uuid(playerId))throw new TypeError('Signed-in parent, child ID and a valid view are required.');
   let disposed=false;
   root.classList.add('btb-parent-live');root.innerHTML='<p role="status">Loading your child’s updates…</p>';
   async function load(){
     const {data:a,error:e}=await supabase.auth.getUser();if(e||!a?.user?.id)throw new Error('Please sign in to your family account.');
     const p=await supabase.from('players').select('id,name,groups').eq('id',playerId).single();
     if(p.error||!p.data?.id)throw new Error('This child is not linked to your authorised account.');
-    const child=p.data;const groups=(Array.isArray(child.groups)?child.groups:[]).filter(group);
-    const [personal,team]=await Promise.all([
-      read(supabase.from('passport_parent_updates').select('id,approved_text,home_activity,published_at').eq('player_id',playerId).order('published_at',{ascending:false}).limit(8)),
-      groups.length?read(supabase.from('academy_parent_team_updates').select('id,group_id,kind,title,body,status,published_at').in('group_id',groups).eq('status','published').order('published_at',{ascending:false}).limit(15)):Promise.resolve([])
+    const child=p.data;
+    // The server unions Passport, team and quick-coach moments using the existing
+    // signed-in guardian relationship and RLS. Never read private moment records.
+    const [verified,homeRows]=await Promise.all([
+      read(supabase.rpc('family_player_learning_feed',{p_player:playerId,p_limit:30})),
+      read(supabase.from('passport_parent_updates').select('home_activity,published_at').eq('player_id',playerId).order('published_at',{ascending:false}).limit(8))
     ]);
     if(disposed)return;
-    // Parents never see drafts, private tactical boards or coach-only observation notes.
-    const moments=mergeFamilyMoments(team,personal);
-    const activity=personal.find(x=>typeof x.home_activity==='string'&&x.home_activity.trim().length)?.home_activity||'';
+    const moments=verifiedFamilyTimeline(verified);
+    const activity=homeRows.find(x=>typeof x.home_activity==='string'&&x.home_activity.trim().length)?.home_activity||'';
     root.innerHTML=`<div class="btb-family-frame"><header><small>BOX TO BOX · FAMILY JOURNEY</small><h2>${esc(child.name||'Your child')}’s learning journey</h2><p>Real progress, shared by your coaching team.</p></header>
        <section class="btb-family-news"><div class="btb-family-section"><h3>Latest from the academy</h3><span>${moments.length} approved ${moments.length===1?'update':'updates'}</span></div>
        ${moments.length?moments.map(m=>`<article class="btb-family-card"><div class="btb-family-meta"><span>${m.type==='child'?'⭐ YOUR CHILD':'⚽ TEAM'}</span><time>${esc(dateText(m.date))}</time></div><h4>${esc(m.title)}</h4><p>${esc(m.body)}</p>${m.type==='child'&&m.home?`<div class="btb-family-at-home"><strong>Try at home</strong><p>${esc(m.home)}</p></div>`:''}</article>`).join(''):'<div class="btb-family-empty"><strong>There are no approved updates yet.</strong><p>When your coach records a genuine training focus or progress note and approves it, it will appear here. We won’t post fictional achievements just to make the feed look busy.</p></div>'}</section>

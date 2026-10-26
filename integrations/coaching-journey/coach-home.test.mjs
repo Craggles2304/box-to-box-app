@@ -57,3 +57,12 @@ test('one-tap tactics and genuine parent updates use assigned group callbacks', 
  assert.deepEqual(calls,[['tactics','U13'],['family','U13']]);
  stop();
 });
+
+test('quick learning moment keeps coach inside their assigned group',async()=>{
+ const el=new FakeElement(),sb=client('coach'),calls=[];
+ const stop=mountCoachHome({root:el,supabase:sb,onOpenPlayer(){},onOpenGroup(){},onOpenQuickMoment:g=>calls.push(g)});
+ await tick();assert.match(el.html,/One learning moment/);
+ const btn={dataset:{btbQuick:'moment'}};el.activeNode=btn;
+ el.eventHandlers.click({target:{closest:selector=>selector==='[data-btb-quick]'?btn:null}});
+ assert.deepEqual(calls,['U13']);stop();
+});
