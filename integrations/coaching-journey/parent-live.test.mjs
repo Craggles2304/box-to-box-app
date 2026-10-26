@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {currentWeekLondon,mergeFamilyMoments,buildCoachFamilyCopy,verifiedFamilyTimeline} from './parent-live.js';
+import {currentWeekLondon,mergeFamilyMoments,buildCoachFamilyCopy,verifiedFamilyTimeline,safeParentFourCorner} from './parent-live.js';
 
 test('London week starts on a Monday in GMT',()=>{
  assert.equal(currentWeekLondon(new Date('2026-10-26T20:03:00Z')),'2026-10-26');
@@ -59,4 +59,16 @@ test('verified family feed merges Passport, group news and micro moments newest 
   {entry_scope:'individual',entry_kind:'passport_progress',body:'Coach approved the target.',published_at:'2026-10-25T00:00:00Z'}];
  const items=verifiedFamilyTimeline(rows);
  assert.equal(items.length,3);assert.equal(items[0].kind,'coach_moment');assert.equal(items[2].type,'team');
+});
+
+
+test('parents see safe Four Corner targets rather than private coaching evidence',()=>{
+ const rows=[{corner:'technical',target_text:'Scan before receiving',evidence_status:'practising',coach_observation:'PRIVATE: sensitive staff-only note'}];
+ const x=safeParentFourCorner(rows);
+ assert.deepEqual(x,[{corner:'Technical',target:'Scan before receiving',status:'Practising'}]);
+ assert.doesNotMatch(JSON.stringify(x),/PRIVATE/);
+});
+test('parent Four Corner view does not invent player scores or display unrecognised statuses',()=>{
+ const x=safeParentFourCorner([{corner:'physical',target_text:'Movement into space',evidence_status:'focus_set'},{corner:'special',target_text:'Unknown',evidence_status:'awarded'}]);
+ assert.equal(x.length,1);assert.equal(x[0].status,'Target set');
 });

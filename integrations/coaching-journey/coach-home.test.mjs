@@ -66,3 +66,13 @@ test('quick learning moment keeps coach inside their assigned group',async()=>{
  el.eventHandlers.click({target:{closest:selector=>selector==='[data-btb-quick]'?btn:null}});
  assert.deepEqual(calls,['U13']);stop();
 });
+
+
+test('only callback-based guardian setup shortcut is added and scoped to assigned team',async()=>{
+ const el=new FakeElement(),sb=client('coach'),calls=[];
+ const stop=mountCoachHome({root:el,supabase:sb,onOpenPlayer(){},onOpenGroup(){},onOpenGuardianLinks:g=>calls.push(g)});
+ await tick();assert.match(el.html,/Help parents connect/);
+ const button={dataset:{btbQuick:'family-links'}};el.activeNode=button;
+ el.eventHandlers.click({target:{closest:selector=>selector==='[data-btb-quick]'?button:null}});
+ assert.deepEqual(calls,['U13']);stop();
+});

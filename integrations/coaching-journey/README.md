@@ -349,3 +349,70 @@ Verify locally: `node --test *.test.mjs`. Integration UI is staged, does not inc
 ### V8 parent feed integration (important)
 
 The existing parent view now reads the **single RLS-checked** `family_player_learning_feed` RPC for three approved streams: individual Passport updates, approved group learning, and approved quick-coach moments. The parent view must not directly read `academy_coach_moments`; its private coach observation is intentionally not queryable by families. A separate read of previously approved Passport home activities retains their Try-at-home feature.
+
+## V9 — Parent First Login + Guardian Connection (26 October 2026)
+
+**NOT A FULL NETLIFY APP.** This staged module requires the complete original Coaching App and its existing signed-in Supabase client. Do not upload this ZIP directly as a site.
+
+### Actual parent experience once integrated
+
+Use the existing *parent sign-in* and route its home screen to this mounting component, not a separate sign-in screen. The signed-in parent receives their own linked children and sees the selected child's **actual coach-approved** learning timeline immediately. With no child linked, show one parent-code input and guardian/privacy confirmation. Existing one-time `claim_player({p_code,p_agree:true})` handles child linking and updates the parent's group list. Multi-child families can switch children or enter another code. Parent roles and family links are checked in Supabase; don't infer links from names or emails.
+
+```html
+<link rel="stylesheet" href="/parent-live.css">
+<link rel="stylesheet" href="/parent-onboarding.css">
+<div id="family-home"></div>
+```
+
+```js
+import {mountParentOnboarding} from '/parent-onboarding.js';
+const disposeFamily = mountParentOnboarding({
+  root:document.getElementById('family-home'),
+  supabase:existingSignedInSupabaseClient,
+  onOpenPassport:(playerId)=>existingAppOpenPassport(playerId)
+});
+// disposeFamily() when leaving the parent route, not on every parent render.
+```
+
+**Critical:** provide and link the academy's *actual* full privacy notice in the host app's enrolment/sign-up flow before enabling code claims for families. The module includes a summary but isn't itself a substitute for that document. Have coaches verify the adult's relationship with the player before giving the link code. Do not put codes in a WhatsApp group or any public place.
+
+`parent-live.js` now also reads only the allowed Four Corner focus+evidence stage through `family_four_corner_focus` and shows real current targets without ever querying or exposing private coach observations. No invented numeric development ratings.
+
+### Coach: share one verified code, without a spreadsheet
+
+Only assigned coaches/director have access to `coach_guardian_invite_queue`, which returns the unlinked roster members of *their selected team*. Neither the query nor the n8n report reveals a code. A coach can request one using the existing checked `create_parent_code` RPC, then hand it privately to the verified parent. It is never sent automatically.
+
+```html
+<link rel="stylesheet" href="/parent-onboarding.css">
+<div id="coach-link-families"></div>
+```
+
+```js
+import {mountCoachGuardianSetup} from '/parent-onboarding.js';
+const disposeGuardianSetup=mountCoachGuardianSetup({
+ root:document.getElementById('coach-link-families'),
+ supabase:existingSignedInSupabaseClient,
+ groupId:existingSelectedGroupId
+});
+```
+
+Existing coach home takes the *optional* callback `onOpenGuardianLinks: groupId=>existingAppOpenFamilyLinking(groupId)`; not a new guessed URL. The coach view displays only the assigned group's missing guardian links and a **Get code** button for each child.
+
+### Implemented Supabase server functions
+
+- `parent_onboarding_home()` — signed-in parent only, SECURITY INVOKER and existing child RLS, shows only own linked children, approved updates and family-safe Four Corner target count. Unlinked parents see a truthful `enter_parent_code` status. No private coach notes, hidden children, or draft content.
+- `coach_guardian_invite_queue(p_group)` — authenticated assigned coach/director only, lists their unlinked players and whether a code is already active. No code is returned on read.
+- `academy_guardian_onboarding_coverage()` — service role only, aggregate totals and group-level counts for the director, with no child names/contacts or invitation codes.
+- `academy_parent_onboarding_brief` + `refresh_parent_onboarding_brief()` — private Director RLS snapshot and service-role-only updater.
+
+The n8n workflow **Box to Box | Parent Onboarding Activation Board** (`jcT2mJjy5lLAKZzj`) calls the refresh RPC and reports `MUST/COULD/NOT TODAY` from group counts; it remains **inactive** until tested manually. No external emails, texts, push or invites are dispatched.
+
+### Actual 26 October roster baseline
+
+Supabase currently has 15 player records; 6 have a registered guardian association and 9 do not. Missing links by group: U15 7, U13 1, U10 1, TD5 0. These are *roster records, not a verified list of attending children or completed guardian identity checks*. No live family sign-in, invite redemption, or end-to-end device test has been performed.
+
+### Verification
+
+Run `node --test *.test.mjs` — **91 mocked unit tests passed** after the V9 addition, including approved-only parent previews, invalid code handling, first-login flow, unsafe HTML handling in existing screens, guardian queue safeguards and callback navigation. SQL RPC presence and GRANT boundaries verified on the real Supabase database. Actual role testing with signed-in guardian and assigned coach is still required before a production release.
+
+**Never deploy integration-only ZIP to Netlify.** The current production site is a separate manually deployed complete app whose original ZIP we don't yet have.

@@ -45,6 +45,15 @@ export function verifiedFamilyTimeline(rows) {
     .sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,12);
 }
 
+
+/** Family-safe Four Corner summary; never expose raw coach observations. */
+export function safeParentFourCorner(rows) {
+ const label={technical:'Technical',physical:'Physical',psychological:'Psychological',social:'Social'};
+ const stage={focus_set:'Target set',practising:'Practising',observed:'Coach observed',demonstrated:'Demonstrated'};
+ return (Array.isArray(rows)?rows:[]).filter(r=>r&&Object.hasOwn(label,r.corner)&&Object.hasOwn(stage,r.evidence_status)&&typeof r.target_text==='string'&&r.target_text.trim())
+  .slice(0,4).map(r=>({corner:label[r.corner],target:r.target_text.trim().slice(0,240),status:stage[r.evidence_status]}));
+}
+
 export function mountParentLive({root,supabase,playerId,onOpenPassport}) {
   if(!(root instanceof Element)||!supabase?.auth?.getUser||!supabase?.from||!supabase?.rpc||!uuid(playerId))throw new TypeError('Signed-in parent, child ID and a valid view are required.');
   let disposed=false;
@@ -56,14 +65,17 @@ export function mountParentLive({root,supabase,playerId,onOpenPassport}) {
     const child=p.data;
     // The server unions Passport, team and quick-coach moments using the existing
     // signed-in guardian relationship and RLS. Never read private moment records.
-    const [verified,homeRows]=await Promise.all([
+    const [verified,homeRows,focusRows]=await Promise.all([
       read(supabase.rpc('family_player_learning_feed',{p_player:playerId,p_limit:30})),
-      read(supabase.from('passport_parent_updates').select('home_activity,published_at').eq('player_id',playerId).order('published_at',{ascending:false}).limit(8))
+      read(supabase.from('passport_parent_updates').select('home_activity,published_at').eq('player_id',playerId).order('published_at',{ascending:false}).limit(8)),
+      read(supabase.rpc('family_four_corner_focus',{p_player:playerId})).catch(()=>[])
     ]);
     if(disposed)return;
     const moments=verifiedFamilyTimeline(verified);
+    const focuses=safeParentFourCorner(focusRows);
     const activity=homeRows.find(x=>typeof x.home_activity==='string'&&x.home_activity.trim().length)?.home_activity||'';
     root.innerHTML=`<div class="btb-family-frame"><header><small>BOX TO BOX · FAMILY JOURNEY</small><h2>${esc(child.name||'Your child')}’s learning journey</h2><p>Real progress, shared by your coaching team.</p></header>
+       ${focuses.length?`<section class="btb-family-focus"><h3>What we are working on</h3><div class="btb-family-focus-grid">${focuses.map(f=>`<article><small>${esc(f.corner)} · ${esc(f.status)}</small><p>${esc(f.target)}</p></article>`).join('')}</div><p>These are current learning focuses, not player grades.</p></section>`:'<p class="btb-family-placeholder">Your coach will add Four Corner development focuses as they assess your child.</p>'}
        <section class="btb-family-news"><div class="btb-family-section"><h3>Latest from the academy</h3><span>${moments.length} approved ${moments.length===1?'update':'updates'}</span></div>
        ${moments.length?moments.map(m=>`<article class="btb-family-card"><div class="btb-family-meta"><span>${m.type==='child'?'⭐ YOUR CHILD':'⚽ TEAM'}</span><time>${esc(dateText(m.date))}</time></div><h4>${esc(m.title)}</h4><p>${esc(m.body)}</p>${m.type==='child'&&m.home?`<div class="btb-family-at-home"><strong>Try at home</strong><p>${esc(m.home)}</p></div>`:''}</article>`).join(''):'<div class="btb-family-empty"><strong>There are no approved updates yet.</strong><p>When your coach records a genuine training focus or progress note and approves it, it will appear here. We won’t post fictional achievements just to make the feed look busy.</p></div>'}</section>
        ${activity?`<aside class="btb-family-activity"><strong>One small thing you can do together</strong><p>${esc(activity)}</p></aside>`:''}
