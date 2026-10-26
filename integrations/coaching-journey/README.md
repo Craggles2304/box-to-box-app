@@ -105,3 +105,33 @@ The coach screen now includes **Your next coaching actions** above the Four Corn
 The n8n workflow **Box to Box | Groundbreaking Coach Action Engine — DIRECTOR PULSE** can refresh and store these action cards when manually executed and after an explicitly approved schedule activation. Historical aggregate coverage and parent approvals are saved daily and seven-day differences require a real prior observation. No parent notifications are sent by the workflow.
 
 **The live app still uses a manual Netlify drop deployment**. Do not deploy this module package without first embedding it into the complete existing app.
+
+## V4 — Team Session DNA (weekly group training drafts)
+
+New embeddable **staff-only** team planning component:
+- `team-session-dna.js` and `team-session-dna.css` — same Box to Box black/volt brand.
+- One draft **60-minute, no-queues, football-first** coaching pack is generated per *rostered group* per week. Uses actual aggregate Four Corner priorities where available, otherwise explicitly labels the pack **baseline discovery**. It does **not** claim any particular child has a skill deficit.
+- Four active practice blocks, coaching cues and a learning-evidence question. Group roster counts are **not attendance predictions**.
+- Only authenticated staff assigned to the group can read the draft through Supabase RLS. Only the group **lead coach/director** can edit and approve it via server-guarded `review_academy_group_session_brief` RPC. Parents cannot read the table.
+- Re-running the preparation function does not create extra group/week drafts and never overwrites an already approved plan.
+- A future fixture is optional *unconfirmed calendar context*, never an automatic training session, venue change, fixture confirmation or booking.
+- New n8n workflow: **Box to Box | Team Session DNA — Weekly Coaching Builder** (`Gtu63FI8c4hTInAL`). Saved inactive, needs a real n8n execution test.
+
+To embed on an existing coach **team** screen (not a player detail screen):
+
+```html
+<link rel="stylesheet" href="/team-session-dna.css">
+<div id="team-session-dna-panel"></div>
+```
+
+```js
+import { mountTeamSessionDNA } from '/team-session-dna.js';
+const dispose = mountTeamSessionDNA({
+  root: document.getElementById('team-session-dna-panel'),
+  supabase: existingSignedInSupabaseClient,
+  groupId: selectedCoachGroupCode, // e.g. 'U13', from existing app state
+});
+// Dispose when changing group or leaving the screen.
+```
+
+Synthetic tests: `node --test team-session-dna.test.mjs` — **8 passing**. Live login/browser tests, end-to-end n8n REST checks and full app embedding remain pending. **Do not deploy these module-only files as a standalone Netlify ZIP.**
