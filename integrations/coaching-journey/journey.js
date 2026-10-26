@@ -69,9 +69,9 @@ export function mountPlayerJourney({root,supabase,playerId}) {
     const ranked=[...rows].sort((a,b)=>(order[a.priority]??9)-(order[b.priority]??9));
     return heading('Your next coaching actions',`<p class="btb-intro">Your live development worklist, prepared by n8n from real academy records. These are administrative prompts, never grades for children.</p>${ranked.length?ranked.map(a=>`<article class="btb-review btb-coach-action"><div class="btb-top"><b>${esc(a.heading)}</b>${badge(a.priority==='now'?'Attention now':a.priority==='next'?'Next step':'When possible')}</div><p>${esc(a.next_step)}</p>${Number(a.affected_items)>1?`<small>${esc(a.affected_items)} related items</small>`:''}</article>`).join(''):empty('Nothing needs a coaching follow-up yet. The next report will appear after new evidence or targets are saved.')}`);
   }
-  function cornersForm(rows) {
+  function cornersForm(rows, keys=FOUR_CORNERS) {
     const found=Object.fromEntries(rows.map(r=>[r.corner,r]));
-    return heading('The Four Corner Model',`<p class="btb-intro">One current target in each corner. Coaches choose what to work on; AI does not grade children.</p><div class="btb-grid">${FOUR_CORNERS.map(key=>{
+    return heading('The Four Corner Model',`<p class="btb-intro">One current target in each corner. Coaches choose what to work on; AI does not grade children.</p><div class="btb-grid">${keys.map(key=>{
       const row=found[key];return `<form class="btb-corner" data-form="corner" data-corner="${key}">
         <div class="btb-top"><b>${CORNERS[key][0]}</b>${row?badge(row.evidence_status.replaceAll('_',' ')):badge('Set focus')}</div>
         <small>${CORNERS[key][1]}</small>
@@ -117,6 +117,55 @@ export function mountPlayerJourney({root,supabase,playerId}) {
     const performance=heading('Performance Hub · Optional small groups',`<p class="btb-intro">Five-player groups, matched to development needs. Express interest only if your family would like details.</p>${groups.length?groups.map(g=>`<article class="btb-review"><b>${esc(g.group_name)}</b><p>${esc(g.session_notes||'Small-group development coaching')} · Maximum ${esc(g.capacity)} players.</p><button class="btb-btn btb-outline" data-action="interest" data-group="${esc(g.id)}" ${interested.has(g.id)?'disabled':''}>${interested.has(g.id)?'Interest registered':'Request information'}</button></article>`).join(''):empty('No Performance Hub groups are currently open.')}`);
     return [corners,feed,challenges,missionPanel,plansPanel,performance].join('');
   }
+  // The default coach interface shows exactly ONE useful task.
+  // All existing editing tools remain available under an optional disclosure.
+  function coachSimpleView(data) {
+    const [corners,drafts,plans,suggestions,missions,catalog,actions]=data;
+    const blank=FOUR_CORNERS.find(c=>!corners.some(x=>x.corner===c));
+    const plan=plans.find(p=>p.status==='draft' && (p.coach_id===current.id || current.role==='admin'));
+    const nextMission=missions.find(m=>m.status!=='coach_verified');
+    let title='Make one useful observation';
+    let helper='Record one target or coaching observation. You do not need to complete every section.';
+    let body=cornersForm(corners,[FOUR_CORNERS[0]]);
+    if(drafts.length){
+      title='Review one parent update';
+      helper='Check the wording, approve it or reject it. Parents only see approved information.';
+      body=draftsForm(drafts.slice(0,1));
+    } else if(blank){
+      title='Choose one '+CORNERS[blank][0].toLowerCase()+' target';
+      helper='One player, one target, one save. The other corners can be added later.';
+      body=cornersForm(corners,[blank]);
+    } else if(plan){
+      title='Review one suggested session';
+      helper='Check the practical activities before you approve anything.';
+      body=plansForm([plan]);
+    } else if(suggestions.length){
+      title='Consider one player mission';
+      helper='Assign it only if the challenge suits this player.';
+      body=missionReview(suggestions.slice(0,1),[],catalog);
+    } else if(nextMission){
+      title='Notice one piece of learning';
+      helper='Only verify a mission when you have seen evidence yourself.';
+      body=missionReview([], [nextMission],catalog);
+    } else {
+      const check=corners.find(c=>c.evidence_status==='focus_set')?.corner || FOUR_CORNERS[0];
+      title='Capture one coaching observation';
+      helper='Use a specific example from the session; one short note is enough.';
+      body=cornersForm(corners,[check]);
+    }
+    const more=actions.filter(x=>x.priority==='now').length;
+    const count=drafts.length+plans.filter(p=>p.status==='draft').length+suggestions.length;
+    return `<section class="btb-simple-intro" aria-label="Coach simple mode">
+       <span class="btb-simple-eyebrow">COACH MODE · ONE THING AT A TIME</span>
+       <h3>${esc(title)}</h3><p>${esc(helper)}</p>
+       <div class="btb-simple-counts"><span>${more ? esc(more)+' urgent' : 'No urgent actions'}</span><span>${count ? esc(count)+' optional reviews' : 'Nothing else to review'}</span></div>
+     </section><div class="btb-simple-main">${body}</div>
+     <details class="btb-more-tools"><summary>More coaching tools <small>Only when you need them</small></summary>
+     <div class="btb-more-body">
+       ${nextCoachActions(actions)}
+       ${cornersForm(corners)}${draftsForm(drafts)}${plansForm(plans)}${missionReview(suggestions,missions,catalog)}
+     </div></details>`;
+  }
   async function draw(){
     if(closed) return;
     current=await who(supabase);
@@ -141,9 +190,7 @@ export function mountPlayerJourney({root,supabase,playerId}) {
         get('player_home_challenge_reflections','challenge_id,created_at',q=>q.eq('submitted_by',current.id).order('created_at',{ascending:false}).limit(100))];
     const data=await Promise.all(requests);
     if(closed) return;
-    const body=staff?
-      [nextCoachActions(data[6]),cornersForm(data[0]),draftsForm(data[1]),plansForm(data[2]),missionReview(data[3],data[4],data[5])].join('')
-      : parentView(...data);
+    const body=staff ? coachSimpleView(data) : parentView(...data);
     root.innerHTML=`<div class="btb-header"><div><small>BOX TO BOX ACADEMY · PLAYER JOURNEY</small><h2>${esc(name)}</h2></div><span class="btb-role">${staff?'COACH VIEW':'FAMILY VIEW'}</span></div><div class="btb-flash" data-journey-status role="status" aria-live="polite"></div>${body}`;
     if(focused) {const node=$(root,focused);if(node)node.focus();focused=null;}
   }
