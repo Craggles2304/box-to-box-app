@@ -18,11 +18,12 @@ export function pickCoachPriority(actions, groupPlans) {
   return { first:tasks[0]??null, more:tasks.slice(1), plans };
 }
 
-export function mountCoachHome({root,supabase,onOpenPlayer,onOpenGroup}) {
+export function mountCoachHome({root,supabase,onOpenPlayer,onOpenGroup,onOpenTactics,onOpenFamilyUpdates,onOpenMatchday}) {
   if(!(root instanceof Element))throw new TypeError('A valid coach dashboard element is required.');
   if(!supabase?.auth?.getUser || !supabase?.from)throw new TypeError('Use the existing signed-in Supabase client.');
   if(typeof onOpenPlayer !== 'function' || typeof onOpenGroup !== 'function')throw new TypeError('Connect player and team navigation from the existing app.');
   let disposed=false;
+  let coachGroups=[];
   root.classList.add('btb-coach-home');
   root.innerHTML='<section class="btb-home-panel" role="status">Loading your coaching day…</section>';
   const q = async query => {const r=await query;if(r.error)throw r.error;return r.data||[];};
@@ -46,6 +47,7 @@ export function mountCoachHome({root,supabase,onOpenPlayer,onOpenGroup}) {
     const latest=new Map();
     for(const p of allowedPlans)if(safeGroup(p.group_id)&&!latest.has(p.group_id))latest.set(p.group_id,p);
     const plans=[...latest.values()].sort((a,b)=>a.group_id.localeCompare(b.group_id));
+    coachGroups=[...new Set([...groups,...plans.map(p=>p.group_id)].filter(safeGroup))];
     const work=pickCoachPriority(actions,plans);
     const ids=[...new Set(actions.map(a=>a.player_id).filter(safeUuid))];
     const names = new Map();
@@ -62,13 +64,25 @@ export function mountCoachHome({root,supabase,onOpenPlayer,onOpenGroup}) {
     }
     const first=work.first?task(work.first):'<div class="btb-home-empty">No urgent player actions. You are up to date with recorded tasks.</div>';
     const teams=work.plans.length?work.plans.map(p=>`<article class="btb-home-team"><div><b>${escapeHtml(p.group_id)} · ${escapeHtml(p.title)}</b><small>${escapeHtml(when(p.week_of))} · ${p.status==='draft'?'Needs lead approval':'Approved'}${p.evidence_basis==='baseline_discovery'?' · Baseline exploration':''}</small></div><button type="button" data-btb-open-group="${escapeHtml(p.group_id)}">View training plan →</button></article>`).join(''):'<p class="btb-home-empty">Training plans will appear here after the academy prepares them.</p>';
+    const quick = coachGroups.length&&(typeof onOpenTactics==='function'||typeof onOpenFamilyUpdates==='function'||typeof onOpenMatchday==='function')?
+      `<section class="btb-home-panel btb-home-shortcuts" aria-label="Quick coaching tools"><div class="btb-home-kicker">3 · QUICK COACH ACTIONS</div><div class="btb-home-shortcut-grid">${coachGroups.length>1?`<label>My team<select data-btb-team-select>${coachGroups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}</select></label>`:''}${typeof onOpenMatchday==='function'?'<button type="button" data-btb-quick="matchday">🏟️ Matchday — 60 sec</button>':''}${typeof onOpenTactics==='function'?'<button type="button" data-btb-quick="tactics">⚽ Tactics board</button>':''}${typeof onOpenFamilyUpdates==='function'?'<button type="button" data-btb-quick="parents">💚 Parent update</button>':''}</div><p>One training idea. One genuine family update. No extra logins.</p></section>`:'';
     root.innerHTML=`<header class="btb-home-heading"><span>BOX TO BOX · COACH MODE</span><h2>Everything for your session. Nothing extra.</h2><p>Do one useful thing, then get back to coaching.</p><div class="btb-home-counter"><strong>${actions.length}</strong> coaching follow-ups <span>·</span> <strong>${countUrgent}</strong> urgent</div></header>
      <section class="btb-home-panel" aria-label="Your next coaching action"><div class="btb-home-kicker">1 · START HERE</div>${first}</section>
      <section class="btb-home-panel" aria-label="Your group training plans"><div class="btb-home-kicker">2 · YOUR TEAM PLAN</div>${teams}</section>
+     ${quick}
      ${moreCount?`<details class="btb-home-more"><summary>Other coaching actions (${moreCount}) <small>Only if you have time</small></summary>${work.more.map(task).join('')}</details>`:''}
      <p class="btb-home-note">No separate n8n login. No duplicate data entry. Parent messages still require coach approval.</p>`;
   }
   function clicked(ev){
+    const quickBtn=ev.target.closest?.('[data-btb-quick]');
+    if(quickBtn && root.contains(quickBtn)){
+      const choice=root.querySelector?.('[data-btb-team-select]')?.value||coachGroups[0];
+      if(!safeGroup(choice)||!coachGroups.includes(choice))return;
+      if(quickBtn.dataset.btbQuick==='matchday' && typeof onOpenMatchday==='function')onOpenMatchday(choice);
+      if(quickBtn.dataset.btbQuick==='tactics' && typeof onOpenTactics==='function')onOpenTactics(choice);
+      if(quickBtn.dataset.btbQuick==='parents' && typeof onOpenFamilyUpdates==='function')onOpenFamilyUpdates(choice);
+      return;
+    }
     const playerBtn=ev.target.closest?.('[data-btb-open-player]');
     if(playerBtn && root.contains(playerBtn) && safeUuid(playerBtn.dataset.btbOpenPlayer)){
       onOpenPlayer(playerBtn.dataset.btbOpenPlayer);return;

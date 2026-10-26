@@ -176,3 +176,142 @@ A coach sees this week's **60-minute overview** as four short activities. The co
 - Live authenticated coach/parent role tests remain pending.
 - Netlify Coaching App remains on the restored manual-drop deployment. **Do not upload only these integration files as a new Netlify deploy.**
 - The n8n schedules remain off until live end-to-end execution and human approval. Any AI content or parent-facing update still needs a coach's approval.
+
+## V6 — Simple Tactics + Genuine Parent Connection (26 October 2026)
+
+**Two priorities:** Coaches need tactical control without a wall of forms, and families should see meaningful, dated coaching updates without generic or invented achievements.
+
+### Coach Home — direct actions
+
+Two new optional callbacks route coaches to their own existing team pages:
+
+```js
+const stopHome = mountCoachHome({
+  root: coachRoot,
+  supabase: existingSignedInSupabaseClient,
+  onOpenPlayer: playerId => existingAppOpenPlayer(playerId),
+  onOpenGroup: groupId => existingAppOpenTeam(groupId),
+  onOpenTactics: groupId => existingAppOpenTeamTab(groupId, 'tactics'),
+  onOpenFamilyUpdates: groupId => existingAppOpenTeamTab(groupId, 'family-updates'),
+});
+```
+
+Coaches with multiple assigned groups select the relevant group before tapping either shortcut; other features remain as in V5.
+
+### Match tactics — uses **existing match_plans**, not a duplicate database
+
+Embed `tactics-simple.js` and `.css` into the already-signed-in **coach match/tactics view**:
+
+```html
+<link rel="stylesheet" href="/tactics-simple.css">
+<div id="tactics-panel"></div>
+```
+
+```js
+import { mountCoachTactics } from '/tactics-simple.js';
+const disposeTactics = mountCoachTactics({
+  root: document.getElementById('tactics-panel'),
+  supabase: existingSignedInSupabaseClient,
+  groupId: selectedGroupId,
+});
+```
+
+- Select 5v5, 7v7, 9v9, 11v11 and a valid formation. A compact pitch shows the positions and goalkeeper.
+- Fill in **With the ball**, **Without the ball**, **When possession changes**. One-touch coaching cues are optional. Set pieces are collapsed.
+- Preserves the existing `match_plans.tactics.with`, `.without`, `.set` plus lineup, substitutions, match objective and publication status. New instructions live under `tactics.coach_simple`.
+- Only the existing lead-coach/admin RLS permissions can write tactics. Editing a published match plan changes that plan's tactics; review the app's existing published-plan process before full rollout.
+- Creates a separate private tactical draft if none exists; only when a lead coach clicks the button. Any fixture reference should be checked before matchday.
+
+### Parent Live — the **genuine** learning journey
+
+Add `parent-live.js` and `.css` to the existing **parent view**:
+
+```js
+import { mountParentLive, mountCoachFamilyUpdate } from '/parent-live.js';
+const disposeFamily = mountParentLive({
+  root: document.getElementById('family-feed'),
+  supabase: existingSignedInSupabaseClient,
+  playerId: selectedChildId,
+  onOpenPassport: playerId => existingAppOpenPlayerPassport(playerId),
+});
+```
+
+This feed combines two authentic sources, always **sorted by real approval timestamp**:
+1. **Child-specific** entries from existing approved `passport_parent_updates`.
+2. **Team-level** entries from new coach-approved `academy_parent_team_updates`, visible only to a linked and approved guardian/player or their authorised staff.
+
+Drafts, private technical notes, unapproved updates and coach tactics **never appear to families**. When no approved update exists, parents see a truthful explanation, not fake “updated today” activity.
+
+### Coach's 30-second family update
+
+Embed on each lead coach's **team page**, not parent view:
+
+```js
+const disposeCoachFamily = mountCoachFamilyUpdate({
+  root: document.getElementById('coach-family-update'),
+  supabase: existingSignedInSupabaseClient,
+  groupId: selectedGroupId,
+});
+```
+
+The lead coach selects **Coming up / This week in training / Match learning**, types one factual observation, then taps **Save draft** or **Approve & share in app**. For a future-focus update, if the week's training plan has been coach-approved, its objective can be reused with wording that makes clear the session is still *planned*. Post-session learning **cannot** be auto-written without real coach input.
+
+New Supabase `academy_parent_team_updates` table uses RLS for authorised guardians/staff; a guarded RPC `save_academy_parent_team_update` checks authorised lead/director before saving or publishing. Browser clients have **no direct insert/update grants**. Family updates are in-app only — no WhatsApp, email or push integration is activated.
+
+### n8n Parent Connection workflow (inactive)
+
+`Box to Box | Parent Connection — Genuine Weekly Update Prompts` (`yOQimUqTboszaX6Z`) calls the internal service-role-only `prepare_approved_team_focus_drafts` and `academy_parent_connection_health` RPCs. It does two things only:
+
+- Suggest coach-review **drafts** based on existing **approved** team-session plans; never publish automatically.
+- Identify team groups without a genuine approved update in the previous seven days so coaches can be asked to share a factual observation **when appropriate**.
+
+The workflow contains **no external send node**, payment or auto-scoring. No separate n8n login is required for coaches or parents.
+
+### Verification
+
+- `node --test *.test.mjs` — **49 passing mocked unit tests** across V1–V6.
+- Supabase migration applied; approved parent feed remains empty until an authorised coach approves an actual update. The Parent Connection workflow is **inactive**, not yet live-executed.
+- A full signed-in coach/parent role test, actual match-plan creation test, full Coaching App source integration and regression tests remain required before deployment.
+- **Never deploy this integration-only ZIP directly to Netlify**, which would replace the currently working app again. The Netlify app uses manual drop deployment, and its complete source ZIP has not yet been recovered.
+
+
+## V7 — Matchday in 60 seconds: Tactics → Real evidence → Parent learning
+
+**Development integration only. Not yet inside the live Netlify Coaching App.**
+
+### What is new and already implemented in Supabase
+- `academy_matchday_coach_cards` uses actual upcoming fixtures and matches them to existing published `match_plans` on group/date. It does **not** overwrite formations, lineups or substitutions or create fictional tactical content.
+- Private `refresh_academy_matchday_coach_cards()` (service role only) creates retry-safe cards. The first verification generated **four** upcoming cards, linked **one** real published tactical plan, and invented **zero** match reviews.
+- After an actual match, lead coaches/director can submit an observed tactical phase, one factual match observation and one next training focus using guarded `record_academy_matchday_learning`. Match reflections are not accepted before 45 minutes after scheduled kickoff, are restricted to 14 days, and cannot overwrite a completed reflection.
+- Optionally prepares **a coach-only parent update DRAFT**, not a parent notification. The group lead must review/approve using the separate `save_academy_parent_team_update` function already present from V6. Parents cannot retrieve drafts.
+- `family_player_learning_feed` safely combines only genuinely published individual Passport updates with genuinely published team updates. Authentication, explicit child relationship and existing RLS are required. Empty feeds must remain honestly empty.
+
+### What is new in n8n
+The **Box to Box | Matchday 60-Second Coach Loop** workflow (`giVqmUcbqlDY8nyV`) is stored **inactive** with the existing Supabase n8n credential. A one-click manual trigger refreshes upcoming private cards and creates an internal coach/director summary. There are no email/SMS/WhatsApp/push nodes, AI billing, automatic parent publishing or fabricated match results. This workflow still requires a live n8n execution test before activation.
+
+### What coaches will actually see once the complete app is integrated
+
+Add to your current staff **team/match screen**:
+
+```html
+<link rel="stylesheet" href="/matchday-quick.css">
+<div id="matchday-quick-panel"></div>
+```
+
+```js
+import {mountCoachMatchday} from '/matchday-quick.js';
+const disposeMatchday=mountCoachMatchday({
+ root:document.getElementById('matchday-quick-panel'),
+ supabase:existingSignedInSupabaseClient,
+ groupId:existingSelectedGroupId,
+ onOpenTactics:groupId=>existingAppOpenTactics(groupId),
+});
+// Call disposeMatchday() on route/team change.
+```
+
+Coach Home supports a third optional callback `onOpenMatchday:groupId=>existingAppOpenMatchday(groupId)` so only an authorised coach's assigned group is opened. Matchday UI shows the next REAL fixture, existing approved formation/cues, and **after the match** a three-field factual reflection. Coach reviews/saves; a separate tap is still required to publish any team-learning note.
+
+### Verification and limitations
+- `node --test *.test.mjs` runs 60 local mocked module tests (49 prior + 11 V7), subject to the actual test output of the installed Node version.
+- Supabase RLS/restricted grant checks and the private refresh RPC have been tested against the actual project's database. Real staff/guardian account tests, full Coaching App regression, and real n8n execution remain outstanding.
+- Do NOT deploy this integration ZIP directly to Netlify. It is not the full app and lacks the full working `index.html` and existing app bundle.
