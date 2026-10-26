@@ -116,3 +116,44 @@ test('A coach must confirm before publishing a parent update',async()=>{
   assert.ok(!calls.some(c=>c.name==='approve_passport_parent_draft'));
   stop();
 });
+
+
+test('Coach sees n8n-generated next action cards without interpreting them as scores',async()=>{
+  const c=client('coach'), root=new FakeElement(),reads=[];
+  c.from=table=>{
+    reads.push(table);
+    const q=new Query(table,'coach');
+    if(table==='academy_coach_actions')q.then=(ok,bad)=>Promise.resolve({data:[{heading:'Set Four Corners',priority:'next',next_step:'Choose one target for each area',affected_items:4}],error:null}).then(ok,bad);
+    return q;
+  };
+  const stop=mountPlayerJourney({root,supabase:c,playerId});await tick();
+  assert.ok(reads.includes('academy_coach_actions'));
+  assert.match(root.html,/Your next coaching actions/);
+  assert.match(root.html,/Set Four Corners/);
+  assert.match(root.html,/Choose one target for each area/);
+  assert.match(root.html,/administrative prompts, never grades/);
+  stop();
+});
+
+test('Parent journey does not fetch private coaching action queue',async()=>{
+  const c=client('parent'),root=new FakeElement(),reads=[];
+  c.from=table=>{reads.push(table);return new Query(table,'parent')};
+  const stop=mountPlayerJourney({root,supabase:c,playerId});await tick();
+  assert.ok(!reads.includes('academy_coach_actions'));
+  assert.doesNotMatch(root.html,/Your next coaching actions/);
+  stop();
+});
+
+test('Action queue text is escaped and cannot inject HTML',async()=>{
+  const c=client('coach'),root=new FakeElement();
+  c.from=table=>{
+    const q=new Query(table,'coach');
+    if(table==='academy_coach_actions')q.then=(ok,bad)=>Promise.resolve({data:[{heading:'<script>alert(1)</script>',priority:'now',next_step:'<img src=x onerror=alert(1)>',affected_items:1}],error:null}).then(ok,bad);
+    return q;
+  };
+  const stop=mountPlayerJourney({root,supabase:c,playerId});await tick();
+  assert.doesNotMatch(root.html,/<script>alert(1)<\/script>/);
+  assert.doesNotMatch(root.html,/<img src=x onerror/);
+  assert.match(root.html,/&lt;script&gt;/);
+  stop();
+});
