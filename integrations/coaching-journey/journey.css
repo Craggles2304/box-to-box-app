@@ -8,3 +8,6 @@
 .btb-flash.btb-error{background:#361f1b;border-left-color:#ffc1b9}
 .btb-done{display:inline-flex;align-items:center;gap:6px;background:#203c27;border-radius:8px;padding:7px 10px;color:var(--btb-green);font-weight:750;font-size:.84rem}
 @media(prefers-reduced-motion:reduce){.btb-journey *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Coach Action Engine — operational prompts without personal ability scores. */
+.btb-coach-action{border-left:3px solid var(--btb-green)}.btb-coach-action .btb-top b{font-size:.98rem}.btb-coach-action small{color:var(--btb-muted)}
