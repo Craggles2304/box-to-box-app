@@ -11,3 +11,18 @@
 
 /* Coach Action Engine — operational prompts without personal ability scores. */
 .btb-coach-action{border-left:3px solid var(--btb-green)}.btb-coach-action .btb-top b{font-size:.98rem}.btb-coach-action small{color:var(--btb-muted)}
+
+/* V5 Coach Simple Mode — one actionable form up front, everything else optional. */
+.btb-simple-intro{background:linear-gradient(130deg,#182d16,#132019);border:1px solid #718f32;border-radius:16px;padding:clamp(16px,3vw,25px);margin:10px 0 14px}
+.btb-simple-eyebrow{color:var(--btb-green);letter-spacing:.13em;font-weight:800;font-size:.7rem}
+.btb-simple-intro h3{font-size:clamp(1.4rem,4vw,1.8rem);margin:7px 0 8px}
+.btb-simple-intro p{color:var(--btb-muted);margin:0 0 12px}
+.btb-simple-counts{display:flex;gap:8px;flex-wrap:wrap}.btb-simple-counts span{padding:5px 10px;border:1px solid var(--btb-line);border-radius:100px;font-size:.78rem}
+.btb-simple-main .btb-panel{border-color:#749f37}.btb-simple-main .btb-grid{grid-template-columns:1fr}
+.btb-more-tools{border:1px solid var(--btb-line);border-radius:16px;margin:15px 0;background:var(--btb-panel)}
+.btb-more-tools>summary{cursor:pointer;min-height:54px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 18px;color:var(--btb-green);font-weight:850;list-style:none}
+.btb-more-tools>summary::-webkit-details-marker{display:none}
+.btb-more-tools>summary small{color:var(--btb-muted);font-size:.76rem;font-weight:400}
+.btb-more-tools[open]>summary{border-bottom:1px solid var(--btb-line)}
+.btb-more-body{padding:15px}.btb-more-body .btb-panel{margin-bottom:12px}
+@media(max-width:600px){.btb-simple-counts{flex-direction:column;align-items:flex-start}.btb-more-tools>summary{align-items:flex-start;flex-direction:column}}
