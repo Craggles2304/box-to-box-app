@@ -63,18 +63,20 @@ export function mountTeamSessionDNA({root,supabase,groupId}){
     return `<article class="btb-team-card"><div class="btb-team-head"><div><span class="btb-team-kicker">WEEK OF ${esc(row.week_of)}</span><h3>${esc(row.title)}</h3></div><span class="btb-team-pill">${esc(row.status)}</span></div>
       <p class="btb-team-muted">${esc(basis)} · ${esc(row.focus_corner)} · ${esc(row.roster_size)} players on the group roster · ${esc(row.four_corner_targets)} recorded Four Corner targets. Roster count is not confirmed attendance.</p>
       ${fixtures}
-      ${row.status==='draft'?`<form data-team-form="${esc(row.id)}"><label>Development objective<textarea name="objective" minlength="20" maxlength="500" required>${esc(row.coach_objective)}</textarea></label>
+      ${row.status==='draft'?`<div class="btb-team-simple"><p class="btb-team-focus"><strong>Today's focus:</strong> ${esc(row.coach_objective)}</p><ol class="btb-team-preview">${blocks.map(b=>`<li><b>${esc(b.minutes)} min</b> — ${esc(b.activity)}</li>`).join('')}</ol></div>
+      <details class="btb-team-edit"><summary>Review & approve this plan <small>Edit only if needed</small></summary>
+      <form data-team-form="${esc(row.id)}"><label>Development objective<textarea name="objective" minlength="20" maxlength="500" required>${esc(row.coach_objective)}</textarea></label>
       <div class="btb-team-blocks">${segmentFields(blocks)}</div>
       <label>What will we observe?<textarea name="observation" minlength="15" maxlength="400" required>${esc(row.observation_prompt)}</textarea></label>
       <p class="btb-team-muted">Lead coach or director approval required. Training plans stay private until approved.</p>
-      <div class="btb-team-actions"><button type="submit" name="intent" value="save">Save draft</button><button type="submit" name="intent" value="approve">Approve training plan</button></div></form>`:
+      <div class="btb-team-actions"><button type="submit" name="intent" value="save">Save draft</button><button type="submit" name="intent" value="approve">Approve training plan</button></div></form></details>`:
       `<p>${esc(row.coach_objective)}</p><ol>${blocks.map(b=>`<li>${esc(b.minutes)} min — ${esc(b.activity)}. ${esc(b.coach_cue)}</li>`).join('')}</ol><p><strong>Coaching evidence prompt:</strong> ${esc(row.observation_prompt)}</p>`}
      </article>`;
   }
   function paint(){
     root.innerHTML=`<header class="btb-team-header"><span>BOX TO BOX · TEAM SESSION DNA</span><h2>${esc(groupId)} Coaching Intelligence</h2><p>Coaching-first session suggestions from real Four Corner priorities. Every plan needs a human review.</p></header>
       <div data-team-dna-status aria-live="polite"></div>
-      ${records.length?records.map(card).join(''):'<section class="btb-team-card"><p>No group sessions have been drafted yet. Run the Team Session DNA workflow manually to create your private coaching plans.</p></section>'}`;
+      ${records.length?card(records[0])+(records.length>1?`<details class="btb-team-history"><summary>Older training plans <small>${records.length-1} previous</small></summary>${records.slice(1).map(card).join('')}</details>`:''):'<section class="btb-team-card"><p>No group sessions have been drafted yet. Your director can prepare a session plan; you do not need to open n8n.</p></section>'}`;
   }
   async function submit(event){
     const form=event.target.closest?.('[data-team-form]');
