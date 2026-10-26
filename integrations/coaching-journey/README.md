@@ -97,3 +97,11 @@ The `boxtobox-coaching` Netlify project currently reports `manual_deploy: true`,
 - [ ] Deploy the complete app ZIP, not this integration-only package.
 
 **NEVER publish this integration ZIP alone to Netlify.** It is not the full Coaching App and lacks the app entry point.
+
+## V3 — Next Best Action Coaching Worklist
+
+The coach screen now includes **Your next coaching actions** above the Four Corner editor. The authenticated staff member reads \`academy_coach_actions\` for the selected player, filtered by Supabase RLS. It shows evidence-based operational tasks (missing Four Corners, pending approvals, outdated observations, mission suggestions) without child ability scores. Parents never fetch that table.
+
+The n8n workflow **Box to Box | Groundbreaking Coach Action Engine — DIRECTOR PULSE** can refresh and store these action cards when manually executed and after an explicitly approved schedule activation. Historical aggregate coverage and parent approvals are saved daily and seven-day differences require a real prior observation. No parent notifications are sent by the workflow.
+
+**The live app still uses a manual Netlify drop deployment**. Do not deploy this module package without first embedding it into the complete existing app.
