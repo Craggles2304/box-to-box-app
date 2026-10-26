@@ -135,3 +135,44 @@ const dispose = mountTeamSessionDNA({
 ```
 
 Synthetic tests: `node --test team-session-dna.test.mjs` — **8 passing**. Live login/browser tests, end-to-end n8n REST checks and full app embedding remain pending. **Do not deploy these module-only files as a standalone Netlify ZIP.**
+
+## V5 — Coach Simple Mode (staged, not yet live)
+
+**Design rule: one screen, one action, then back to coaching.** The module is an optional part of your existing app and never replaces its working features.
+
+### Coach Home
+
+Add `coach-home.js` and `coach-home.css` to the full Coaching App's existing signed-in **coach dashboard**. It shows the most important assigned-player follow-up and latest private team plan. Additional work is collapsed by default. It reads the existing RLS-protected action board created by the n8n Director Pulse—**the coach does not need an n8n account**.
+
+```html
+<link rel="stylesheet" href="/coach-home.css">
+<div id="coach-home-panel"></div>
+```
+
+```js
+import { mountCoachHome } from '/coach-home.js';
+const stopCoachHome = mountCoachHome({
+ root: document.getElementById('coach-home-panel'),
+ supabase: existingSignedInSupabaseClient,
+ onOpenPlayer: (playerId) => existingAppOpenPlayerPassport(playerId),
+ onOpenGroup: (groupId) => existingAppOpenCoachTeam(groupId),
+});
+// Call stopCoachHome() when leaving the coach dashboard.
+```
+
+The integration requires callbacks into the existing app's own navigation, rather than guessing URL routes. Role and row permissions are enforced server-side. No keys or local child data are stored. Parents cannot use this coach-only interface.
+
+### Player Passport
+
+The coach sees **one recommended task at a time**, with a single focus target or a single pending approval visible by default. The original target editor, training plans, mission reviews and action queue remain accessible under **More coaching tools**. The coach can still complete all work but never has to face a wall of forms.
+
+### Team Session DNA
+
+A coach sees this week's **60-minute overview** as four short activities. The complete editing fields stay in the **Review & approve this plan** disclosure until explicitly opened. Previous plans stay collapsed under **Older training plans**. The lead coach still has to review the content before approval; a preview never triggers publication.
+
+### Verification and rollout
+
+- `node --test coach-home.test.mjs journey.test.mjs team-session-dna.test.mjs` — **30 mocked tests passed**.
+- Live authenticated coach/parent role tests remain pending.
+- Netlify Coaching App remains on the restored manual-drop deployment. **Do not upload only these integration files as a new Netlify deploy.**
+- The n8n schedules remain off until live end-to-end execution and human approval. Any AI content or parent-facing update still needs a coach's approval.
