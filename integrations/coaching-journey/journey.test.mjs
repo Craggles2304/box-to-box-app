@@ -157,3 +157,29 @@ test('Action queue text is escaped and cannot inject HTML',async()=>{
   assert.match(root.html,/&lt;script&gt;/);
   stop();
 });
+
+test('Coach Simple Mode puts one target before advanced tools',async()=>{
+  const root=new FakeElement(),stop=mountPlayerJourney({root,supabase:client('coach'),playerId});await tick();
+  const beforeMore=root.html.split('<details class="btb-more-tools">')[0];
+  assert.match(beforeMore,/COACH MODE · ONE THING AT A TIME/);
+  assert.match(beforeMore,/Choose one technical target/);
+  assert.match(beforeMore,/data-corner="technical"/);
+  assert.doesNotMatch(beforeMore,/data-corner="physical"/);
+  assert.match(root.html,/<details class="btb-more-tools">/);
+  stop();
+});
+
+test('Coach Simple Mode puts pending parent approval first',async()=>{
+  const c=client('coach');const original=c.from;
+  c.from=table=>{
+    const q=original(table);
+    if(table==='passport_update_drafts') q.then=(ok,bad)=>Promise.resolve({data:[{id:'00000000-0000-4000-8000-000000000051',status:'draft',draft_text:'A clear coach observation for review.',suggested_home_activity:'Two minute gentle passing practice.',created_at:'2026-10-26'}],error:null}).then(ok,bad);
+    return q;
+  };
+  const root=new FakeElement(),stop=mountPlayerJourney({root,supabase:c,playerId});await tick();
+  const top=root.html.split('<details class="btb-more-tools">')[0];
+  assert.match(top,/Review one parent update/);
+  assert.match(top,/Approve &amp; publish|Approve & publish/);
+  assert.doesNotMatch(top,/data-corner="technical"/);
+  stop();
+});
