@@ -1,0 +1,62 @@
+/* Shared academy identity: coaching, family, player and operations surfaces. */
+:root{--academy-radius:16px}
+#main .page-h,#main .sec-title{font-family:var(--display,Anton);text-transform:uppercase;line-height:1.08;letter-spacing:0}
+#main .page-h{font-size:clamp(34px,8vw,52px)}
+#main .view{gap:20px}
+#main .view>.eyebrow{border-left:4px solid var(--lime);padding:4px 12px;font:750 11px/1.4 var(--ui,Arial);letter-spacing:1.5px}
+.coach-command{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--lime);border-radius:16px;padding:26px 22px}
+.coach-command:after{content:'';position:absolute;right:-36px;top:20px;width:160px;height:160px;border:1px solid var(--line);border-radius:50%;pointer-events:none}
+.coach-command .eyebrow{font:750 10px/1.4 var(--ui,Arial);letter-spacing:1.6px;color:var(--muted)}
+.coach-command h1{margin:18px 0 12px!important;font-size:52px!important}
+.coach-command h1 span{display:block;color:var(--lime);font-size:23px;margin-top:10px}
+.coach-command p:last-child{font-size:13px;color:var(--muted);max-width:270px}
+.coach-hub .ct-grid{gap:12px}
+.coach-hub .ct,.home-grid .ct{border:1px solid var(--line);border-radius:16px;padding:20px;min-height:165px;background:var(--surface);text-align:left;position:relative;overflow:hidden;text-decoration:none}
+.coach-hub .ct b,.home-grid .ct b{font:400 24px/1.1 var(--display,Anton);text-transform:uppercase;margin-top:12px;display:block}
+.coach-hub .ct small,.home-grid .ct small{font:400 12px/1.5 var(--ui,Arial);color:var(--muted);margin-top:9px}
+.coach-hub .ct-ico,.home-grid .ct-ico{background:var(--bg)!important;color:var(--lime);border:1px solid var(--line);border-radius:50%;width:36px;height:36px}
+.coach-hub .ct-checkin{background:var(--lime)!important;color:#111;grid-column:1/-1;min-height:150px}
+.coach-hub .ct-checkin b{font-size:32px}.coach-hub .ct-checkin small{color:#343a13}
+.coach-hub .ct-checkin .ct-ico{color:#111;background:transparent!important;border-color:#687626}
+.coach-hub .ct-checkin:after{content:'↗';position:absolute;right:24px;top:32px;font:44px var(--ui,Arial)}
+.coach-hub .ct-players{border-top:3px solid var(--lime)}
+.workspace-label{font:750 11px/1.4 var(--ui,Arial);letter-spacing:1.7px;color:var(--muted);margin:12px 0 0}
+.coach-links{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.coach-links>a,.coach-links>button{padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:650 15px/1.3 var(--ui,Arial);text-decoration:none;text-align:left;cursor:pointer}
+.coach-links span{display:block;font:400 12px/1.5 var(--ui,Arial);color:var(--muted);margin-top:8px}
+.coach-sub .ct-head{border-bottom:1px solid var(--line);padding-bottom:16px}
+.prep-card,.cin-card,.cpd-card,.cal-month,.m-me{border:1px solid var(--line);border-radius:16px}
+.prep-card{border-top:3px solid var(--lime)}
+.prep-card h3{font:400 26px/1.15 var(--display,Anton);text-transform:uppercase}
+.prep-day{font-family:var(--display,Anton)}
+.cpd-bar{height:5px;border-radius:4px;overflow:hidden}
+.cpd-bar span{background:var(--lime)}
+#main .hero2{border:1px solid var(--line);border-top:4px solid var(--lime);border-radius:16px;background:var(--surface);padding:24px}
+#main .hero2 h1{font:400 clamp(36px,9vw,56px)/1.08 var(--display,Anton);text-transform:uppercase}
+#main .hero2-k{font:700 10px/1.5 var(--ui,Arial);letter-spacing:1px;color:var(--muted)}
+#main .hero2 p{font-size:14px;line-height:1.5}
+.btb-journey{--btb-green:var(--lime);--btb-panel:var(--surface);--btb-line:var(--line);--btb-muted:var(--muted);background:var(--bg)!important;color:var(--ink)!important;font-family:var(--ui,Arial)!important}
+.btb-panel,.btb-corner,.btb-review,.btb-simple-intro,.btb-more-tools{background:var(--surface)!important;border-color:var(--line)!important;color:var(--ink)}
+.btb-corner{border-top:3px solid var(--lime)!important}
+.btb-header h2,.btb-simple-intro h3{font:400 30px/1.1 var(--display,Anton)!important;text-transform:uppercase}
+.btb-corner h3{font:400 23px/1.15 var(--display,Anton)}
+.btb-corner textarea,.btb-review textarea,.btb-corner select{background:var(--bg);color:var(--ink);border-color:var(--line);font:16px/1.5 var(--ui,Arial)}
+.btb-family-frame,.btb-family-coach-shell,.btb-team-shell,.btb-moment-card,.btb-parent-welcome{background:var(--surface)!important;color:var(--ink)!important;border:1px solid var(--line)!important;border-top:3px solid var(--lime)!important;border-radius:16px!important;font-family:var(--ui,Arial)!important}
+.btb-family-frame :is(h2,h3),.btb-family-coach-shell h2,.btb-team-head h2,.btb-moment-card h2,.btb-parent-welcome h2{font-family:var(--display,Anton)!important;font-weight:400!important;text-transform:uppercase;color:var(--ink)!important}
+.btb-family-frame :is(p,h4),.btb-family-frame .btb-family-card,.family-focus-card h3{color:var(--ink)!important}
+.btb-family-frame .btb-family-card,.btb-family-focus,.btb-family-news,.btb-team-block,.btb-team-focus{background:var(--bg)!important;border-color:var(--line)!important;border-radius:12px}
+.btb-family-frame .family-focus-card h3{font:500 17px/1.55 var(--ui,Arial)!important;text-transform:none!important}
+.family-focus-card textarea{background:var(--bg);border-color:var(--line);color:var(--ink);font-family:var(--ui,Arial)}
+#ops-panel .ops-card{border:1px solid var(--line);border-radius:16px}
+#ops-panel .ops-card h2{font:400 25px/1.15 var(--display,Anton);text-transform:uppercase}
+#ops-panel .ops-heading{border-bottom:1px solid var(--line);padding-bottom:18px}
+#ops-panel #ops-tabs{padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+#ops-panel .ops-item{line-height:1.6}
+.day-register{padding:20px;border:1px solid var(--line);border-top:3px solid var(--lime);border-radius:16px}
+.day-register h2{font:400 28px var(--display,Anton);text-transform:uppercase}
+nav.tabs a{min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-family:var(--ui,Arial)!important;letter-spacing:0!important;text-transform:none!important}
+nav.tabs a[aria-current=page]{color:var(--lime)!important}
+nav.tabs a[aria-current=page] svg{stroke:var(--lime)}
+@media(hover:hover){.coach-hub .ct:hover,.coach-links>a:hover,.coach-links>button:hover,.home-grid .ct:hover{border-color:var(--lime)}}
+@media(max-width:380px){.coach-hub .ct,.home-grid .ct{padding:16px}.coach-hub .ct b,.home-grid .ct b{font-size:21px}.coach-links{grid-template-columns:1fr}}
+@media(min-width:800px){.coach-hub .ct-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.coach-hub .ct-checkin{grid-column:span 2}.coach-links{grid-template-columns:repeat(4,minmax(0,1fr))}}

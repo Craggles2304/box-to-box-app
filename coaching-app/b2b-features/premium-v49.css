@@ -1,0 +1,97 @@
+/* Box to Box V49 · unified performance UI: no external fonts, no fake activity. */
+:root, :root[data-theme="light"],:root[data-theme="dark"]{
+  --bg:#080b08; --surface:#121812; --ink:#f1f6ed; --muted:#a9b5aa;
+  --line:#2a352b; --lime:#bdff16; --accent:#bdff16;
+  --bar:#080b08; --on-bar:#f1f6ed; --on-lime:#080b08;
+  color-scheme:dark;
+}
+html{scroll-padding-top:90px}
+body.btb-v49{background:radial-gradient(ellipse at 82% -14%,rgba(189,255,22,.055),transparent 44%),var(--bg);letter-spacing:-.005em}
+body.btb-v49 .top{background:rgba(8,11,8,.89);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-bottom:1px solid #ffffff17}
+body.btb-v49 .top .logo-img{filter:drop-shadow(0 0 9px rgba(189,255,22,.18))}
+body.btb-v49 .top .sub{font-weight:800;letter-spacing:.17em}
+body.btb-v49 main.wrap{max-width:1090px;padding-top:22px}
+body.btb-v49 nav.tabs{background:rgba(11,15,11,.89);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);box-shadow:0 -12px 35px #0005}
+body.btb-v49 nav.tabs a[hidden]{display:none!important}
+body.btb-v49 nav.tabs a[aria-current="page"]{color:var(--lime)!important}
+body.btb-v49 :is(.card,.day-action,.day-hub .day-hero,.btb-home-panel,.btb-panel,.btb-review,.btb-corner,.btb-family-card,.btb-team-block,.btb-family-focus,.coach-links>a,.coach-links>button){
+  border-radius:17px;box-shadow:inset 0 1px rgba(255,255,255,.055),0 12px 28px rgba(0,0,0,.09);
+}
+body.btb-v49 :is(.day-head,.coach-command,.btb-home-heading,.btb-family-frame>header,.btb-parent-welcome>header){position:relative;isolation:isolate}
+body.btb-v49 :is(.coach-command,.btb-home-heading,.day-head){background:radial-gradient(ellipse at 100% 10%,rgba(189,255,22,.12),transparent 55%),linear-gradient(122deg,#132016,#090d0a)!important;border:1px solid #3a4c30;border-radius:23px!important;padding:clamp(22px,5vw,38px)!important;overflow:hidden}
+body.btb-v49 :is(.coach-command,.btb-home-heading,.day-head):after{content:'';position:absolute;z-index:-1;width:220px;height:220px;border-radius:50%;border:1px solid #baff153b;right:-95px;bottom:-135px;pointer-events:none}
+body.btb-v49 .btb-home-heading h2{font:900 clamp(27px,5vw,43px)/1.02 var(--display,Impact,sans-serif)!important;letter-spacing:.005em;text-transform:uppercase}
+body.btb-v49 :is(.btb-home-heading p,.day-intro,.coach-command p:last-child){max-width:55ch;line-height:1.55}
+body.btb-v49 :is(.btb-moment-card,.btb-family-frame,.btb-family-coach-shell,.btb-parent-welcome,.btb-coach-home){
+  background:linear-gradient(135deg,rgba(24,35,26,.89),rgba(10,17,12,.95))!important;
+  border:1px solid #30432e!important;border-radius:22px!important;color:var(--ink)!important;
+  box-shadow:0 18px 44px #0005,inset 0 1px rgba(255,255,255,.07);
+}
+body.btb-v49 :is(.btb-moment h2,.btb-family-frame h2,.btb-parent-welcome h2,.btb-family-coach h2){font:900 clamp(26px,5vw,39px)/1 var(--display,Impact,sans-serif)!important;letter-spacing:.01em;text-transform:uppercase}
+body.btb-v49 :is(.btb-moment input,.btb-moment select,.btb-moment textarea,.btb-corner textarea,.btb-review textarea,.btb-family-coach textarea,.btb-family-coach select,.btb-parent-onboarding input){background:#0d160f!important;color:var(--ink)!important;border:1px solid #556855!important;border-radius:13px!important;min-height:49px;font-size:16px}
+body.btb-v49 :is(button,.btn,a)[disabled]{opacity:.55;cursor:not-allowed}
+body.btb-v49 :is(.btb-moment-main,.btb-home-go,.btb-home-team button,.btb-parent-onboarding button[type=submit],.btb-coach-guardian button,.btb-btn,.day-action:focus-visible){
+  background:linear-gradient(140deg,#d4ff61,#b6ff00)!important;color:#11170b!important;border:1px solid #e0ffa7!important;
+  border-radius:13px!important;box-shadow:inset 0 1px #fff8,0 8px 20px #b6ff0020!important;
+  font-weight:850!important;
+}
+body.btb-v49 :is(.btb-moment button,.btb-coach-home button,.btb-parent-onboarding button,.btb-workspace-back button){min-height:46px;touch-action:manipulation}
+body.btb-v49 :is(.btb-moment button,.btb-home-panel button,.btb-parent-onboarding button):focus-visible{outline:3px solid var(--lime);outline-offset:3px}
+body.btb-v49 .btb-family-card{background:#132016!important;color:#edf5ed!important;border:1px solid #374a36!important}
+body.btb-v49 .btb-family-card :is(p,h4){color:#edf5ed!important}
+body.btb-v49 .btb-family-at-home,body.btb-v49 .btb-family-activity{background:#1d2d1f!important;color:#e4f7e4!important;border-left:3px solid var(--lime)!important}
+body.btb-v49 .btb-family-focus article{background:#162218!important;color:var(--ink)!important;border-color:#394c37!important}
+body.btb-v49 .btb-family-focus article p{color:var(--ink)!important}
+body.btb-v49 .btb-family-empty{background:#152219;color:#e1efdf;border:1px solid #394c37}
+body.btb-v49 .btb-moment-continuity{border:1px solid #628146;background:linear-gradient(145deg,#1c2c1b,#101911);border-radius:17px;padding:clamp(15px,3vw,23px);margin-top:18px}
+body.btb-v49 .btb-moment-continuity-kicker{color:var(--lime);font-size:11px;font-weight:850;letter-spacing:.16em}
+body.btb-v49 .btb-moment-continuity h3{font:900 clamp(20px,4vw,28px)/1.13 var(--display,Impact,sans-serif);text-transform:uppercase;margin:10px 0}
+body.btb-v49 .btb-moment-continuity p{color:var(--ink)}
+body.btb-v49 .btb-moment-steps{display:flex;gap:7px;flex-wrap:wrap;margin:15px 0}
+body.btb-v49 .btb-moment-steps span{padding:7px 11px;background:#2a3e24;border:1px solid #46613a;color:#d1f0cb;border-radius:100px;font-weight:750;font-size:11px}
+body.btb-v49 .btb-moment-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin:14px 0}
+body.btb-v49 .btb-moment-buttons button{min-height:50px;border-radius:12px;border:1px solid #748c69;background:#1c2d1c;color:#f3fff0;margin:0}
+body.btb-v49 .btb-moment-buttons button[data-moment-focus]{background:var(--lime);color:#0c1308;border-color:var(--lime)}
+body.btb-v49 .btb-moment-continuity>small{display:block;color:#b9caba}
+body.btb-v49 .day-action :is(strong,small){overflow-wrap:anywhere}
+body.btb-v49 .day-action:active{transform:translateY(1px)}
+/* Native five-action bottom nav for the coaching role; overflow stays accessible. */
+.btb-v49-more{display:none}
+@media(max-width:740px){
+  body.btb-v49.btb-mobile-nav nav.tabs .wrap{overflow:visible;display:flex;justify-content:space-around;gap:0}
+  body.btb-v49.btb-mobile-nav nav.tabs .wrap>a:not([data-tab="home"]):not([data-tab="today"]):not([data-tab="team"]):not([data-tab="coaches"]):not([data-tab="chat"]){display:none!important}
+  body.btb-v49.btb-mobile-nav nav.tabs .wrap>a, body.btb-v49.btb-mobile-nav nav.tabs .btb-v49-more{min-width:0;flex:1 1 0;font-size:11px!important;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px 3px 10px;border:0;background:transparent;color:var(--muted);font-weight:700;position:relative;text-decoration:none}
+  body.btb-v49.btb-mobile-nav nav.tabs .btb-v49-more svg{width:21px;height:21px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  body.btb-v49.btb-mobile-nav nav.tabs .btb-v49-more[aria-expanded="true"]{color:var(--lime)}
+  body.btb-v49 .btb-v49-drawer[hidden],body.btb-v49 .btb-v49-overlay[hidden]{display:none!important}
+  body.btb-v49 .btb-v49-overlay{position:fixed;inset:0;background:#0009;z-index:60}
+  body.btb-v49 .btb-v49-drawer{position:fixed;left:10px;right:10px;bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:61;background:rgba(19,28,20,.96);border:1px solid #607f47;box-shadow:0 22px 65px #000a;border-radius:23px;backdrop-filter:blur(24px);padding:19px;max-height:70vh;overflow:auto}
+  body.btb-v49 .btb-v49-drawer header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  body.btb-v49 .btb-v49-drawer h2{font:900 26px var(--display,Impact,sans-serif);text-transform:uppercase;margin:0}
+  body.btb-v49 .btb-v49-drawer button[data-btb-close]{background:#243529;color:#fff;border:1px solid #52634b;min-width:42px;min-height:42px;border-radius:13px}
+  body.btb-v49 .btb-v49-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  body.btb-v49 .btb-v49-links a{background:#243128;color:#f5fff2;border:1px solid #3c503d;border-radius:13px;padding:18px 12px;display:flex;align-items:center;min-height:66px;font-weight:800;text-decoration:none}
+  body.btb-v49 .btb-v49-links a[aria-current="page"]{border-color:var(--lime);color:var(--lime)}
+  body.btb-v49.btb-drawer-open{overflow:hidden}
+}
+@media(min-width:741px){body.btb-v49 .btb-v49-drawer,body.btb-v49 .btb-v49-overlay{display:none!important}}
+@media(prefers-reduced-motion:no-preference){body.btb-v49 :is(.day-action,.btb-moment-main,.btb-moment-buttons button,.coach-links>a,.coach-links>button){transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}body.btb-v49 :is(.day-action,.btb-moment-main):hover{transform:translateY(-2px);box-shadow:0 12px 30px #0007}}
+
+/* Director overview: sourced only from authenticated database aggregates. */
+body.btb-v49 .btb-director-pulse{padding:clamp(16px,3vw,24px);background:linear-gradient(128deg,#111c13,#0d140d);border-radius:22px;border:1px solid #455c39;margin:18px 0}
+body.btb-v49 .btb-director-pulse>header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:17px}
+body.btb-v49 .btb-director-pulse h3{font:900 clamp(22px,5vw,32px)/1 var(--display,Impact,sans-serif);margin:4px 0 0}
+body.btb-v49 .btb-director-pulse small{font-size:10px;color:var(--lime);letter-spacing:.12em;font-weight:800}
+body.btb-v49 .btb-director-pulse p,body.btb-v49 .btb-director-pulse-note{color:var(--muted);font-size:12px}
+body.btb-v49 .btb-pulse-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+body.btb-v49 .btb-pulse-grid article{background:#192719;border:1px solid #385034;border-radius:14px;padding:16px 12px}
+body.btb-v49 .btb-pulse-grid strong{display:block;color:var(--lime);font:900 clamp(28px,5vw,44px)/1 var(--display,Impact,sans-serif)}
+body.btb-v49 .btb-pulse-grid span{color:var(--ink);font-size:12px}
+body.btb-v49 .btb-director-pulse-note{display:block;margin-top:11px}
+@media(max-width:590px){body.btb-v49 .btb-pulse-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* V50: the role-built bar carries five tabs plus More. day-hub.css pins this grid to
+   five columns, which pushed More onto a second row. Six columns, one row. */
+@media(max-width:740px){
+  body.btb-v49.btb-mobile-nav nav.tabs .wrap{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+}

@@ -1,0 +1,1251 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Box to Box Academy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>@font-face{font-family:"Anton";src:url(../fonts/Anton.ttf) format("truetype");font-display:swap}@font-face{font-family:"Barlow";src:url(../fonts/Barlow.ttf) format("truetype");font-weight:400 600;font-display:swap}@font-face{font-family:"Barlow Condensed";src:url(../fonts/BarlowCondensed.ttf) format("truetype");font-weight:600 700;font-display:swap}</style>
+<style>
+/* Layout: a single phone-shaped app shell — sticky brand bar, one scrolling view, role-built tab bar pinned to the bottom. */
+:root{
+  --bg:#0A0A0A; --surface:#141414; --surface2:#1C1C1C;
+  --line:#222222; --line2:#2A2A2A;
+  --ink:#FFFFFF; --soft:#D6D6D6; --muted:#8E8E8E;
+  --lime:#C8FF00; --on-lime:#0A0A0A; --lime-dim:#1A1E0C; --lime-line:#3F4A1E;
+  --display:"Anton","Arial Narrow",sans-serif;
+  --head:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r-card:16px; --r-row:12px; --r-pill:100px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+h1,h2,h3{margin:0;text-wrap:balance}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+svg{display:block}
+
+.app{height:100%;max-width:440px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+@media (min-width:860px){
+  .app{max-width:420px;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+}
+.pad{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* brand bar */
+.top{flex:none;border-bottom:1px solid var(--line);background:var(--bg)}
+.top .bar{display:flex;align-items:center;gap:10px;padding-block:11px;min-height:56px}
+.logo{flex:none;width:26px;height:26px;border-radius:6px;background:var(--lime);display:grid;place-items:center;font:700 11px/1 var(--head);color:var(--on-lime);letter-spacing:.02em}
+.wordmark{font:700 12px/1 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.grow{flex-grow:1;min-width:0}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--r-pill);border:1px solid var(--line2);background:var(--surface);color:var(--ink);font:700 12px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--lime);border-color:var(--lime);color:var(--on-lime)}
+.chip.lime{background:var(--lime-dim);border-color:var(--lime-line);color:var(--lime)}
+.iconbtn{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:var(--r-pill);border:1px solid var(--line2);background:var(--surface);cursor:pointer;color:var(--ink)}
+.backbtn{flex:none;display:grid;place-items:center;width:32px;height:32px;margin-left:-6px;border:0;background:none;cursor:pointer;color:var(--ink)}
+
+/* role switch */
+.roles{display:flex;gap:4px;padding-bottom:10px;overflow-x:auto;scrollbar-width:none}
+.roles::-webkit-scrollbar{display:none}
+.roles button{flex:none;height:28px;padding:0 11px;border-radius:var(--r-pill);border:1px solid var(--line2);background:var(--surface);color:var(--muted);font:700 11px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.roles button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.roles .lab{display:flex;align-items:center;font:700 10px/1 var(--head);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding-right:4px}
+
+/* view */
+main{flex-grow:1;overflow-y:auto;overscroll-behavior:contain}
+.view{display:flex;flex-direction:column;gap:18px;padding-block:14px 28px}
+.title .eyebrow{display:block;font:700 11px/1 var(--head);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.title h1{margin-top:4px;font:400 clamp(34px,11vw,46px)/.94 var(--display);text-transform:uppercase}
+.title p{margin-top:8px;font-size:14px;line-height:1.45;color:var(--muted)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card)}
+.row{display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-row)}
+.row.lit{background:var(--lime-dim);border-color:var(--lime-line)}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec>header{display:flex;align-items:baseline;gap:8px}
+.sec h2{flex-grow:1;font:700 13px/1 var(--head);letter-spacing:.18em;text-transform:uppercase}
+.sec header span{font-size:12px;font-weight:600;color:var(--muted)}
+.kicker{display:block;font:700 11px/1 var(--head);letter-spacing:.18em;text-transform:uppercase;color:var(--lime)}
+.sub{font-size:13px;color:var(--muted)}
+.big{font:400 1em/1 var(--display)}
+.tnum{font-variant-numeric:tabular-nums}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:48px;border-radius:var(--r-pill);border:0;background:var(--lime);color:var(--on-lime);font:700 13px/1 var(--head);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;text-decoration:none}
+.btn.ghost{background:transparent;border:1px solid #3A3A3A;color:var(--ink)}
+.btn.sm{min-height:38px;padding:0 14px;width:auto;font-size:12px}
+.btn[disabled]{opacity:.5;cursor:default}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.tiles.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tile{padding:14px;border-radius:var(--r-row);background:var(--surface);border:1px solid var(--line)}
+.tile.lit{background:var(--lime-dim);border-color:var(--lime-line)}
+.tile b{display:block;font:400 30px/1 var(--display)}
+.tile.lit b{color:var(--lime)}
+.tile span{display:block;margin-top:5px;font:700 11px/1.2 var(--head);letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.tile.lit span{color:var(--lime)}
+
+.track{display:grid;gap:4px;grid-auto-flow:column;grid-auto-columns:1fr}
+.track i{height:5px;border-radius:var(--r-pill);background:#262626}
+.track i.on{background:var(--lime)}
+.bar{height:5px;border-radius:var(--r-pill);background:#262626;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--lime);border-radius:var(--r-pill);transition:width .35s ease}
+
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-flex;align-items:center;height:28px;padding:0 11px;border-radius:var(--r-pill);background:var(--surface2);border:1px solid var(--line2);font-size:13px;font-weight:600;color:var(--soft)}
+.tag.lime{background:var(--lime-dim);border-color:var(--lime-line);color:var(--lime)}
+.dot{flex:none;width:8px;height:8px;border-radius:var(--r-pill);background:var(--lime)}
+.dot.off{background:transparent;border:2px solid var(--ink)}
+.dot.dim{background:var(--muted)}
+.av{flex:none;display:grid;place-items:center;width:52px;height:52px;border-radius:var(--r-pill);background:var(--surface2);border:2px solid var(--line2);font:700 18px/1 var(--head)}
+.av.on{border-color:var(--lime);color:var(--lime)}
+
+.scroller{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.scroller::-webkit-scrollbar{display:none}
+
+/* sub tabs */
+.subtabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.subtabs button{flex:1;padding:0 4px 10px;border:0;background:none;color:var(--muted);font:700 12px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.subtabs button[aria-selected="true"]{color:var(--lime);border-bottom-color:var(--lime)}
+
+/* pitch */
+.pitch{position:relative;height:178px;border-radius:8px;background:#101510;border:1px solid #243024;overflow:hidden}
+.pitch .ln{position:absolute;background:#243024}
+.pitch .pl{position:absolute;transform:translate(-50%,-50%);display:grid;place-items:center;width:23px;height:23px;border-radius:var(--r-pill);background:var(--lime);color:var(--on-lime);font:700 11px/1 var(--head)}
+.pitch .pl.gk{background:var(--ink)}
+
+/* map */
+.map{flex:none;position:relative;width:48px;height:48px;border-radius:10px;background:#101510;border:1px solid #243024;overflow:hidden}
+.map i{position:absolute;background:#243024}
+.map svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+
+/* tab bar */
+.tabbar{flex:none;border-top:1px solid var(--line);background:var(--bg)}
+.tabbar .inner{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;min-height:74px}
+.tabbar button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0;border:0;background:none;color:var(--muted);cursor:pointer;padding:6px 2px}
+.tabbar button[aria-current="page"]{color:var(--lime)}
+.tabbar span{font:700 10px/1 var(--head);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:#000A;z-index:40}
+.sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:440px;z-index:41;background:#141A14;border:1px solid var(--lime-line);border-bottom:0;border-radius:22px 22px 0 0;padding:18px 18px calc(20px + env(safe-area-inset-bottom,0px));max-height:76%;overflow:auto}
+.sheet header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sheet h2{flex-grow:1;font:400 24px/1 var(--display);text-transform:uppercase}
+.sheet .links{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.sheet .links button{display:flex;align-items:center;gap:9px;min-height:60px;padding:12px;border-radius:var(--r-row);background:var(--surface2);border:1px solid var(--line2);color:var(--ink);font:700 13px/1.15 var(--head);letter-spacing:.06em;text-transform:uppercase;text-align:left;cursor:pointer}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:50;background:var(--lime);color:var(--on-lime);padding:11px 18px;border-radius:var(--r-pill);font:700 13px/1 var(--head);letter-spacing:.08em;text-transform:uppercase;box-shadow:0 10px 30px #0008}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="bar pad">
+      <span class="logo" id="logo">B2B</span>
+      <span class="wordmark">Box to Box</span>
+      <span class="grow"></span>
+      <span id="topRight"></span>
+    </div>
+    <div class="roles pad" id="roles"></div>
+  </header>
+
+  <main id="main"><div class="view pad" id="view"></div></main>
+
+  <nav class="tabbar" aria-label="Main"><div class="inner pad" id="tabs"></div></nav>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="More" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- icons ---------- */
+  var S = function (d, extra) {
+    return '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  };
+  var ICON = {
+    home: S('<path d="M3.5 11.2 12 4l8.5 7.2V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/>'),
+    cal: S('<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17"/><path d="M8 3v4"/><path d="M16 3v4"/>'),
+    chart: S('<polyline points="3.5 16.5 9 11 13 15 20.5 7"/><polyline points="15 7 20.5 7 20.5 12.5"/>'),
+    shield: S('<path d="M12 3.2 19 6v5.6c0 4.3-2.9 7.3-7 8.9-4.1-1.6-7-4.6-7-8.9V6z"/>'),
+    pitch: S('<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M12 5v14"/><circle cx="12" cy="12" r="2.6"/><path d="M3 9.5h2.5v5H3"/><path d="M21 9.5h-2.5v5H21"/>'),
+    grid: S('<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>'),
+    id: S('<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="9.5" r="2.6"/><path d="M8.5 17c.6-2 1.9-3 3.5-3s2.9 1 3.5 3"/>'),
+    user: S('<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6"/>'),
+    chat: S('<path d="M20.5 12c0 4-3.8 7.2-8.5 7.2-1 0-2-.15-2.9-.42L4 20.5l1.3-3.4C4.2 15.8 3.5 14 3.5 12 3.5 8 7.3 4.8 12 4.8s8.5 3.2 8.5 7.2z"/>'),
+    people: S('<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.6a3.2 3.2 0 0 1 0 6.3"/><path d="M17.5 14.9c2.1.6 3.5 2.4 3.5 5.1"/>'),
+    pin: S('<path d="M12 21s6.5-5.6 6.5-10.3A6.5 6.5 0 0 0 5.5 10.7C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.2"/>'),
+    clip: S('<path d="M8.5 3.5h7v3h-7z"/><path d="M15.5 5h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3"/><polyline points="8.5 13 10.5 15 15.5 10"/>'),
+    star: S('<path d="M12 3.5 14.4 9l6 .5-4.6 4 1.4 5.9L12 16.3 6.8 19.4l1.4-5.9-4.6-4 6-.5z"/>'),
+    cup: S('<path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5.5H4.5V8a3 3 0 0 0 3 3"/><path d="M17 5.5h2.5V8a3 3 0 0 1-3 3"/><path d="M12 14v4"/><path d="M8.5 20h7"/>'),
+    book: S('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5A2.5 2.5 0 0 1 4 20.5z"/>'),
+    dots: '<svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>',
+    chev: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 5 16 12 9 19"/></svg>',
+    back: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 5 8 12 15 19"/></svg>',
+    down: '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 9 12 16 19 9"/></svg>',
+    tick: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 13 10 18 19 6"/></svg>',
+    lock: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>'
+  };
+
+  /* ---------- academy data ---------- */
+  var VENUE = { name: "Box to Box Park", pitch: "Pitch 3", address: "Hale Lane, N20 8AB" };
+  var MAPQ = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent("Box to Box Park, Hale Lane, N20 8AB");
+
+  var CORNERS = [
+    { k: "technical", name: "Technical", desc: "Ball mastery, scanning and football decisions.", level: 2,
+      target: "Receive on my back foot and play forward.", stage: 2,
+      saw: [
+        { t: "Turned away from pressure twice in the 7v7 and found the striker.", by: "Coach Ryan", d: "Thu 23 Oct", xp: 25 },
+        { t: "First touch still goes square under pressure. Open the body earlier.", by: "Coach Ryan", d: "Tue 14 Oct", xp: 0 }
+      ],
+      tests: [{ n: "Directional touch, 1 m gate", s: "8/10", lvl: "Silver" }, { n: "Driven pass, 25 m", s: "5/10", lvl: "Bronze" }] },
+    { k: "physical", name: "Physical", desc: "Age-appropriate movement and coordination.", level: 3,
+      target: "Repeat short sprints without dropping off in the last ten minutes.", stage: 3,
+      saw: [{ t: "Held his sprint speed through the last block of the session.", by: "Coach Ryan", d: "Tue 21 Oct", xp: 25 }],
+      tests: [{ n: "Repeated 20 m sprints", s: "6 reps", lvl: "Silver" }] },
+    { k: "psychological", name: "Psychological", desc: "Confidence, resilience and concentration.", level: 2,
+      target: "Stay brave on the ball after a mistake.", stage: 2,
+      saw: [{ t: "Lost it, asked for it straight back, kept playing forward.", by: "Coach Ryan", d: "Sat 18 Oct", xp: 25 }],
+      tests: [] },
+    { k: "social", name: "Social", desc: "Communication, teamwork and leadership.", level: 4,
+      target: "Organise the press from the front.", stage: 4,
+      saw: [{ t: "Ran the whole back line's shape when the captain came off.", by: "Coach Dani", d: "Sat 18 Oct", xp: 50 }],
+      tests: [] }
+  ];
+  var LEVELS = ["Working towards", "Bronze", "Silver", "Gold"];
+  var STAGES = ["Target set", "Practising", "Coach saw it", "Demonstrated"];
+  var RANKS = ["Street Baller", "Game Changer", "Rising Star", "Playmaker", "Wonderkid", "Elite Baller", "Superstar", "Football Icon", "GOAT Status", "Box to Box Legend"];
+
+  var TEAMS = [
+    { id: "fal", name: "Falcons U15", coach: "Ryan C.", n: 16, ok: true },
+    { id: "tit", name: "Titans U12", coach: "Dani P.", n: 14, ok: true },
+    { id: "vip", name: "Vipers U10", coach: "Sam W.", n: 15, ok: false, note: "4 reviews due" },
+    { id: "eli", name: "Elite U13", coach: "Ryan C.", n: 13, ok: true }
+  ];
+
+  var SQUAD = [
+    { in: "JM", n: "Jacob M.", a: "yes" }, { in: "AR", n: "Amir R.", a: "yes" },
+    { in: "TO", n: "Tomas O.", a: "yes" }, { in: "KB", n: "Kai B.", a: "yes" },
+    { in: "DS", n: "Dele S.", a: "yes" }, { in: "HF", n: "Harry F.", a: "yes" },
+    { in: "LP", n: "Louis P.", a: "yes" }, { in: "MN", n: "Musa N.", a: "yes" },
+    { in: "OW", n: "Oscar W.", a: "yes" }, { in: "RJ", n: "Reece J.", a: "yes" },
+    { in: "SB", n: "Sam B.", a: "yes" }, { in: "TC", n: "Theo C.", a: "yes" },
+    { in: "WD", n: "Will D.", a: "yes" }, { in: "EN", n: "Eli N.", a: "no" },
+    { in: "FG", n: "Finn G.", a: "no" }, { in: "GH", n: "Gus H.", a: "none" },
+    { in: "IV", n: "Ivan V.", a: "none" }, { in: "JP", n: "Jude P.", a: "none" }
+  ];
+
+  var WEEK = [
+    { day: "Mon", date: 27, items: [] },
+    { day: "Tue", date: 28, today: true, items: [{ t: "18:30", title: "Training · Falcons U15", sub: "Pitch 3 · 75 min · you are coaching", go: "checkin" }] },
+    { day: "Wed", date: 29, items: [{ t: "17:30", title: "Training · Titans U12", sub: "Pitch 1 · Dani P." }] },
+    { day: "Thu", date: 30, items: [{ t: "17:00", title: "Training · Vipers U10", sub: "Pitch 2 · Sam W." }] },
+    { day: "Fri", date: 31, items: [] },
+    { day: "Sat", date: 1, items: [{ t: "10:00", title: "Match · Falcons v Hale End", sub: "KO 10:00 · arrive 09:30 · home", go: "match" }] },
+    { day: "Sun", date: 2, items: [] }
+  ];
+
+  var PRINCIPLES = [
+    { ph: "In possession", items: ["Build from the keeper", "Create a 3v2", "Switch before the press sets"] },
+    { ph: "Out of possession", items: ["Press the first pass", "Compact mid-block"] },
+    { ph: "Attack to defence", items: ["Counter-press 5 seconds"] },
+    { ph: "Defence to attack", items: ["First pass forward"] }
+  ];
+
+  var SHAPE = [
+    { n: 1, x: 7, y: 50, gk: true }, { n: 2, x: 25, y: 15 }, { n: 5, x: 25, y: 38 },
+    { n: 6, x: 25, y: 62 }, { n: 3, x: 25, y: 85 }, { n: 4, x: 50, y: 26 },
+    { n: 8, x: 50, y: 50 }, { n: 10, x: 50, y: 74 }, { n: 7, x: 76, y: 20 },
+    { n: 9, x: 76, y: 50 }, { n: 11, x: 76, y: 80 }
+  ];
+
+  /* The academy's real five blocks, their dates, aims and four-corner content.
+     Week-by-week session plans load from the syllabus, so the parts below are structure, not content. */
+  var BLOCKS = [
+    { n: 1, name: "Foundations & Team Basics", start: "2026-10-03", end: "2026-11-21",
+      aim: "Players build the core techniques and meet the first principle of each moment of the game.",
+      c: { "Technical": "Receiving with both feet, side-foot passing, close control, basic turns, shooting technique.",
+           "Tactical": "Create options to play out, support the ball, find and attack space, protect the goal.",
+           "Physical": "Agility, balance and coordination (ABCs); change of direction.",
+           "Psych / social": "Confidence on the ball, learning names, encouraging teammates." } },
+    { n: 2, name: "Attacking & Defensive Principles", start: "2026-11-28", end: "2027-01-16",
+      aim: "Players learn the principles of play: width, depth, penetration and support in attack; pressure, cover, compactness and delay in defence.",
+      c: { "Technical": "Dribbling to beat a player, finishing, passing under pressure, defending stance.",
+           "Tactical": "Create and finish chances; press as a team; stay compact; keep the ball and build safely.",
+           "Physical": "Acceleration and deceleration; repeated short sprints.",
+           "Psych / social": "Bravery to take players on; resilience after mistakes; talking to teammates." } },
+    { n: 3, name: "Developing Team Play", start: "2027-01-23", end: "2027-03-13",
+      aim: "Players combine in small units: creating angles, covering teammates and progressing the ball together.",
+      c: { "Technical": "Receiving on the move, combination play (wall pass, overlap), defending and passing out.",
+           "Tactical": "Create angles, progress forward, keep control, cover teammates, find the free player, force mistakes.",
+           "Physical": "Speed endurance; agility with the ball.",
+           "Psych / social": "Communication in pairs and units; taking responsibility." } },
+    { n: 4, name: "Team Understanding", start: "2027-03-20", end: "2027-05-08",
+      aim: "Players begin to understand and explain the game model, organising themselves and each other on the pitch.",
+      c: { "Technical": "Defending 1v1, passing under pressure, combination play, dribbling to finish.",
+           "Tactical": "Press together, react first, break pressure, support angles, create chances, stay connected.",
+           "Physical": "Repeat sprint ability; strength through contact.",
+           "Psych / social": "Organising teammates; staying composed when it turns." } },
+    { n: 5, name: "Performance Development", start: "2027-05-15", end: "2027-07-03",
+      aim: "Players perform their skills at match speed, under fatigue and pressure, with higher standards of quality.",
+      c: { "Technical": "Every technique at match speed, first time where it is on.",
+           "Tactical": "Game management; reading when to go and when to keep.",
+           "Physical": "Match-speed repeat efforts under fatigue.",
+           "Psych / social": "Leadership; holding standards for each other." } }
+  ];
+  function todayLondon() {
+    return new Date(new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" }) + "T00:00:00Z");
+  }
+  function currentBlock() {
+    var n = todayLondon();
+    for (var i = 0; i < BLOCKS.length; i++) {
+      if (n >= new Date(BLOCKS[i].start + "T00:00:00Z") && n <= new Date(BLOCKS[i].end + "T00:00:00Z")) return BLOCKS[i];
+    }
+    for (var j = 0; j < BLOCKS.length; j++) {
+      if (n < new Date(BLOCKS[j].start + "T00:00:00Z")) return BLOCKS[j];
+    }
+    return BLOCKS[BLOCKS.length - 1];
+  }
+  function prettyRange(b) {
+    var o = { day: "numeric", month: "short", timeZone: "UTC" };
+    return new Date(b.start + "T00:00:00Z").toLocaleDateString("en-GB", o) + " – " +
+      new Date(b.end + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  }
+  var BLOCK = { get n() { return currentBlock().n; }, get start() { return currentBlock().start; }, weeks: 8 };
+  function firstClause(s) { return String(s || "").split(/,|;/)[0].trim(); }
+  function weekInfo(wk) {
+    var b = currentBlock();
+    var review = wk === BLOCK.weeks;
+    return {
+      wk: wk, review: review, block: b,
+      title: review ? "Block review" : b.name,
+      obj: review ? "Mastery check and player reviews for the whole squad." : b.aim,
+      tech: review ? "Mastery check, all tests" : firstClause(b.c["Technical"]),
+      game: review ? "Free play" : firstClause(b.c["Tactical"]),
+      bench: review ? "" : "Directional first touch into a 1 m gate, 10 each foot.",
+      home: review ? "Nothing set — enjoy the week off the ball." : "Ten minutes on this week's technique, both feet."
+    };
+  }
+  function blockWeek() {
+    var start = new Date(BLOCK.start + "T00:00:00Z");
+    var now = new Date(new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" }) + "T00:00:00Z");
+    var w = Math.floor((now - start) / 604800000) + 1;
+    return Math.max(1, Math.min(BLOCK.weeks, w));
+  }
+  function weekDate(wk) {
+    var d = new Date(BLOCK.start + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() + (wk - 1) * 7);
+    return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  }
+  function weekIso(wk) {
+    var d = new Date(BLOCK.start + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() + (wk - 1) * 7);
+    return d.toISOString().slice(0, 10);
+  }
+  function partsFor(s) {
+    return [
+      { t: "0'", name: "Arrival · rondo corners", mins: 10, points: "Every player a ball. Quality of first touch, both feet." },
+      { t: "10'", name: "Technical · " + s.tech, mins: 20, points: "Open the body before it arrives. Scan twice. Play forward if it is on." },
+      { t: "30'", name: "Game · " + s.game, mins: 25, points: "A goal counts double if it comes from the week's objective." },
+      { t: "55'", name: "Finish · free play", mins: 15, points: "Name the moment that led to each goal." }
+    ];
+  }
+
+  /* Coach CPD: modules of steps, each with why / minutes / portfolio evidence */
+  var CPD = [
+    { m: "Coaching the 8–12 age group", steps: [
+      { t: "Why technique before tactics", why: "What a 10-year-old can and cannot hold in their head.", mins: 12, done: true, ev: false },
+      { t: "Designing a rondo that transfers", why: "Shape, numbers and the one rule that makes it game-like.", mins: 15, done: true, ev: true },
+      { t: "Intervene without stopping play", why: "Coaching in the run of play instead of freezing it.", mins: 10, done: false, ev: true }
+    ] },
+    { m: "Building a session from the syllabus", steps: [
+      { t: "Read the week, write the session", why: "Turning an objective into four parts.", mins: 14, done: true, ev: false },
+      { t: "Adapting for low numbers", why: "Keeping the objective when six turn up.", mins: 8, done: false, ev: false }
+    ] },
+    { m: "Safeguarding on the sideline", steps: [
+      { t: "What to do and who to tell", why: "The academy's reporting route, in order.", mins: 11, done: false, ev: false }
+    ] }
+  ];
+  var RATE = ["Not yet", "Getting there", "Good", "Great"];
+
+  /* IDP: one target per corner, set in Block One weeks 1–2, shared with parents */
+  var IDP = [
+    { c: "Technical", t: "Receive on the back foot and play forward.", stage: 2, coach: "Achieved", self: "Achieved" },
+    { c: "Tactical", t: "Scan twice before the ball arrives.", stage: 3, coach: "Achieved", self: "Working towards" },
+    { c: "Physical", t: "Hold sprint speed into the last ten minutes.", stage: 3, coach: "Exceeding", self: "Achieved" },
+    { c: "Psych / social", t: "Stay brave on the ball after a mistake.", stage: 2, coach: "Working towards", self: "Achieved" }
+  ];
+  var RATINGS = ["Working towards", "Achieved", "Exceeding"];
+
+  var STATS = {
+    goals: [["Dele S.", 9], ["Amir R.", 7], ["Jacob M.", 5], ["Kai B.", 4], ["Theo C.", 3]],
+    assists: [["Jacob M.", 8], ["Tomas O.", 5], ["Harry F.", 4], ["Dele S.", 3], ["Musa N.", 2]],
+    apps: [["Tomas O.", 11], ["Jacob M.", 11], ["Kai B.", 10], ["Amir R.", 10], ["Will D.", 9]]
+  };
+
+  var LEARNING = [
+    { h: "How we coach 4–7", p: "Fun first. Lots of touches, every child with a ball, no queues." },
+    { h: "How we coach 8–12", p: "Technique first. The eight basics, both feet, repeated under light pressure." },
+    { h: "Ball mastery 7–12", p: "Every surface, directional touch, one-touch play. Mastery levels bronze to gold." },
+    { h: "The all-round player", p: "The four corners carry equal weight. A player is never reduced to their technique." }
+  ];
+
+  /* ---------- state ---------- */
+  var DEFAULT = { role: "coach", view: "coachHome", corner: "technical", team: "fal", sub: "players",
+    xp: 740, done: false, checkedIn: false, inAt: "", avail: {}, log: [], logs: [], ach: "Yes" };
+  var st = null;
+  try { st = JSON.parse(localStorage.getItem("b2b.v50") || "null"); } catch (e) { st = null; }
+  if (!st || typeof st !== "object") st = null;
+  var state = Object.assign({}, DEFAULT, st || {});
+  function save() { try { localStorage.setItem("b2b.v50", JSON.stringify(state)); } catch (e) {} }
+
+  function rankOf(xp) {
+    var i = Math.min(RANKS.length - 1, Math.floor(xp / 250));
+    var floor = i * 250, next = (i + 1) * 250;
+    return { name: RANKS[i], i: i, pct: i >= RANKS.length - 1 ? 100 : Math.round((xp - floor) * 100 / (next - floor)),
+      need: i >= RANKS.length - 1 ? 0 : next - xp, next: i >= RANKS.length - 1 ? null : RANKS[i + 1] };
+  }
+  function availCount(v) {
+    var n = 0;
+    for (var i = 0; i < SQUAD.length; i++) {
+      var a = state.avail[SQUAD[i].in] || SQUAD[i].a;
+      if (a === v) n++;
+    }
+    return n;
+  }
+
+  /* ---------- nav model ---------- */
+  var NAV = {
+    coach: [["coachHome", "Coach", "home"], ["calendar", "Calendar", "cal"], ["develop", "Develop", "chart"], ["match", "Match", "shield"], ["more", "More", "dots"]],
+    player: [["playerHome", "Home", "home"], ["passport", "Passport", "id"], ["calendar", "Calendar", "cal"], ["match", "Match", "shield"], ["messages", "Messages", "chat"]],
+    parent: [["parentHome", "Home", "home"], ["passport", "My player", "user"], ["calendar", "Calendar", "cal"], ["match", "Match", "shield"], ["messages", "Messages", "chat"]],
+    director: [["coachHome", "Coach", "home"], ["calendar", "Calendar", "cal"], ["match", "Match", "shield"], ["director", "Director", "grid"], ["more", "More", "dots"]]
+  };
+  var MORE = {
+    coach: [["tactics", "Tactics Hub", "pitch"], ["cpd", "Coach development", "book"], ["stats", "Player stats", "chart"], ["checkin", "Check in", "pin"], ["players", "Players", "people"], ["messages", "Messages", "chat"]],
+    director: [["develop", "Development", "chart"], ["cpd", "Coach development", "book"], ["stats", "Player stats", "chart"], ["tactics", "Tactics Hub", "pitch"], ["coaches", "Coaches", "people"], ["players", "Players", "people"]]
+  };
+  var ROOTS = { coach: "coachHome", player: "playerHome", parent: "parentHome", director: "coachHome" };
+
+  /* ---------- helpers ---------- */
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]; }); }
+  function track(on, total) {
+    var h = '<span class="track">';
+    for (var i = 0; i < total; i++) h += '<i class="' + (i < on ? "on" : "") + '"></i>';
+    return h + "</span>";
+  }
+  function mapRow(opts) {
+    opts = opts || {};
+    var pitch = opts.pitch || VENUE.pitch;
+    var sub = opts.sub || VENUE.address;
+    var flat = opts.flat ? "border:0;border-top:1px solid var(--line);border-radius:0;" : "";
+    return '<a class="row" href="' + MAPQ + '" target="_blank" rel="noopener" style="' + flat + 'text-decoration:none;color:inherit">' +
+      '<span class="map"><i style="left:-6px;top:16px;width:60px;height:1px;transform:rotate(-18deg)"></i>' +
+      '<i style="left:-6px;top:34px;width:60px;height:1px;transform:rotate(-18deg)"></i>' +
+      '<i style="left:30px;top:-6px;width:1px;height:60px;transform:rotate(14deg)"></i>' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C8FF00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s6.5-5.6 6.5-10.3A6.5 6.5 0 0 0 5.5 10.7C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.2"/></svg></span>' +
+      '<span class="grow" style="min-width:0"><b style="display:block;font-size:14px;font-weight:600">' + esc(VENUE.name) + ' · ' + esc(pitch) + '</b>' +
+      '<span class="sub" style="display:block;margin-top:2px">' + esc(sub) + '</span></span>' +
+      '<span style="flex:none;display:flex;align-items:center;gap:3px;font:700 12px/1 var(--head);letter-spacing:.08em;text-transform:uppercase;color:var(--lime)">Directions' + ICON.chev.replace('width="16" height="16"', 'width="11" height="11"') + '</span></a>';
+  }
+  function cornerBy(k) { for (var i = 0; i < CORNERS.length; i++) if (CORNERS[i].k === k) return CORNERS[i]; return CORNERS[0]; }
+  function teamBy(id) { for (var i = 0; i < TEAMS.length; i++) if (TEAMS[i].id === id) return TEAMS[i]; return TEAMS[0]; }
+
+  var toastTimer;
+  function toast(msg) {
+    var old = document.getElementById("toast");
+    if (old) old.remove();
+    var el = document.createElement("div");
+    el.className = "toast"; el.id = "toast"; el.setAttribute("role", "status"); el.textContent = msg;
+    document.body.appendChild(el);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { var t = document.getElementById("toast"); if (t) t.remove(); }, 2200);
+  }
+
+  /* ---------- views ---------- */
+  var V = {};
+
+  V.coachHome = function () {
+    var t = teamBy(state.team);
+    return '<div class="title"><span class="eyebrow">Coach Hub · Tuesday 27 October</span><h1>Your day</h1></div>' +
+      '<div class="card" style="overflow:hidden;border-color:var(--lime-line)">' +
+        '<div style="height:3px;background:var(--lime)"></div>' +
+        '<div style="padding:16px">' +
+          '<span class="kicker">Next session · 18:30</span>' +
+          '<h2 style="margin-top:7px;font:400 clamp(25px,7.4vw,31px)/1.02 var(--display);text-transform:uppercase">' + esc(weekInfo(blockWeek()).tech) + "</h2>" +
+          '<p class="sub" style="margin-top:8px">' + esc(t.name) + " · " + esc(VENUE.pitch) + " · 75 min · " + t.n + " players</p>" +
+          '<button class="btn" style="margin-top:15px" data-go="checkin">' +
+            (state.checkedIn ? "Start session" : "Check in") + "</button></div></div>" +
+      '<div class="tiles c3">' +
+        quick("clip", "Register", "players") + quick("star", "Moment", "develop") + quick("chat", "Message", "messages") +
+      '</div>' +
+      '<div class="sec"><header><h2>Needs you</h2><span class="tag lime" style="height:20px;padding:0 8px;font-size:11px">2</span></header>' +
+        linkRow("3 player reviews due", t.name + " · by Friday", "develop", true) +
+        linkRow("Saturday squad unconfirmed", "Vipers U10 · " + availCount("none") + " no reply", "match", true) +
+      '</div>' +
+      '<div class="sec"><header><h2>Your development</h2><span>6 week streak</span></header>' +
+        linkRow("Coach pathway", "5 of 6 steps · 4 recall cards due", "cpd", false) +
+        linkRow("This week’s syllabus", "Block " + BLOCK.n + " week " + blockWeek() + " · " + weekInfo(blockWeek()).title.toLowerCase(), "develop", false) +
+      '</div>';
+  };
+  function quick(icon, label, go) {
+    return '<button class="tile" data-go="' + go + '" style="text-align:left;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:68px;padding:12px;color:var(--ink)">' +
+      '<span style="color:var(--lime)">' + ICON[icon].replace('width="21" height="21"', 'width="19" height="19"') + '</span>' +
+      '<span style="margin:0;font:700 12px/1 var(--head);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)">' + label + '</span></button>';
+  }
+  function linkRow(title, sub, go, dot) {
+    return '<button class="row" data-go="' + go + '" style="cursor:pointer;text-align:left;width:100%;color:var(--ink)">' +
+      (dot ? '<span class="dot"></span>' : "") +
+      '<span class="grow"><b style="display:block;font-size:15px;font-weight:600;line-height:1.25">' + esc(title) + '</b>' +
+      '<span class="sub" style="display:block;margin-top:2px">' + esc(sub) + '</span></span>' +
+      '<span style="flex:none;color:var(--muted)">' + ICON.chev + '</span></button>';
+  }
+
+  V.calendar = function () {
+    var h = '<div class="title"><span class="eyebrow">October – November 2026</span><h1>Calendar</h1></div>';
+    h += '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">';
+    WEEK.forEach(function (d) {
+      var hot = d.items.length > 0;
+      h += '<span style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0 9px;border-radius:10px;' +
+        (d.today ? "background:var(--lime)" : "background:var(--surface);border:1px solid var(--line)") + '">' +
+        '<span style="font:700 10px/1 var(--head);letter-spacing:.04em;text-transform:uppercase;color:' + (d.today ? "var(--on-lime)" : "var(--muted)") + '">' + d.day + '</span>' +
+        '<span class="tnum" style="font:700 15px/1 var(--head);color:' + (d.today ? "var(--on-lime)" : "var(--ink)") + '">' + (d.date < 10 ? "0" : "") + d.date + '</span>' +
+        '<span style="width:4px;height:4px;border-radius:99px;background:' + (d.today ? "var(--on-lime)" : hot ? "var(--lime)" : "#2A2A2A") + '"></span></span>';
+    });
+    h += "</div>";
+    WEEK.forEach(function (d) {
+      if (!d.items.length) return;
+      h += '<div class="sec"><header><h2 style="color:' + (d.today ? "var(--lime)" : "var(--ink)") + '">' + (d.today ? "Today · " : "") + d.day + " " + d.date + '</h2></header>';
+      d.items.forEach(function (it) {
+        h += '<button class="row' + (d.today ? " lit" : "") + '" ' + (it.go ? 'data-go="' + it.go + '"' : "") + ' style="cursor:pointer;text-align:left;width:100%;color:var(--ink)">' +
+          '<span class="tnum" style="flex:none;font:400 18px/1 var(--display);color:var(--lime)">' + it.t + '</span>' +
+          '<span style="flex:none;width:1px;height:32px;background:#262626"></span>' +
+          '<span class="grow"><b style="display:block;font-size:15px;font-weight:600;line-height:1.25">' + esc(it.title) + '</b>' +
+          '<span class="sub" style="display:block;margin-top:2px">' + esc(it.sub) + '</span></span>' +
+          (it.go ? '<span style="flex:none;color:var(--muted)">' + ICON.chev + "</span>" : "") + "</button>";
+      });
+      h += "</div>";
+    });
+    return h;
+  };
+
+  V.develop = function () {
+    var tabs = [["players", "Passports"], ["syllabus", "Syllabus"], ["theme", "Theme"], ["learning", "Learning"]];
+    var h = '<div class="title"><span class="eyebrow">Block ' + BLOCK.n + " · week " + blockWeek() + " of " + BLOCK.weeks + '</span><h1>Development</h1></div>' +
+      '<div class="subtabs" role="tablist">';
+    tabs.forEach(function (t) {
+      h += '<button role="tab" data-sub="' + t[0] + '" aria-selected="' + (state.sub === t[0]) + '">' + t[1] + "</button>";
+    });
+    h += "</div>";
+
+    if (state.sub === "syllabus") {
+      h += syllabusBlock();
+    } else if (state.sub === "theme") {
+      h += '<div class="card" style="padding:16px"><span class="kicker">This block’s theme</span>' +
+        '<h2 style="margin-top:7px;font:400 24px/1.02 var(--display);text-transform:uppercase">' + esc(weekInfo(blockWeek()).title) + "</h2>" +
+        '<div style="margin-top:14px">' + track(blockWeek(), BLOCK.weeks) + "</div>" +
+        '<p class="sub" style="margin-top:10px">Week ' + blockWeek() + " of " + BLOCK.weeks + ' · all four teams on this theme</p></div>' +
+        '<div class="sec"><header><h2>Teams on it</h2></header>' +
+        TEAMS.map(function (t) {
+          return '<div class="row"><span class="dot' + (t.ok ? "" : " off") + '"></span><span class="grow">' +
+            '<b style="display:block;font:700 16px/1 var(--head);letter-spacing:.04em;text-transform:uppercase">' + esc(t.name) + '</b>' +
+            '<span class="sub" style="display:block;margin-top:2px">' + esc(t.coach) + " · " + t.n + ' players</span></span></div>';
+        }).join("") + "</div>";
+    } else if (state.sub === "learning") {
+      h += '<div class="sec"><header><h2>Coaching methodology</h2></header>' +
+        LEARNING.map(function (l) {
+          return '<div class="card" style="padding:15px 16px"><h3 style="font:700 16px/1.1 var(--head);letter-spacing:.04em;text-transform:uppercase">' + esc(l.h) + "</h3>" +
+            '<p style="margin-top:6px;font-size:14px;line-height:1.45;color:var(--soft)">' + esc(l.p) + "</p></div>";
+        }).join("") + "</div>" +
+        '<div class="row"><span class="grow"><b style="display:block;font-size:15px;font-weight:600">Team syllabus 2026–27</b>' +
+        '<span class="sub" style="display:block;margin-top:2px">Weekly timetable and session plans</span></span>' +
+        '<span style="flex:none;color:var(--muted)">' + ICON.chev + "</span></div>";
+    } else {
+      h += '<div class="sec"><header><h2>Player passports</h2><span>16 players</span></header>' +
+        '<div class="scroller">' +
+        SQUAD.slice(0, 7).map(function (p, i) {
+          return '<button data-go="passport" style="flex:none;display:flex;flex-direction:column;align-items:center;gap:7px;border:0;background:none;cursor:pointer;color:var(--ink);width:62px">' +
+            '<span class="av' + (i === 0 ? " on" : "") + '">' + p.in + "</span>" +
+            '<span class="sub" style="font-size:11px">' + esc(p.n.split(" ")[0]) + "</span></button>";
+        }).join("") + "</div></div>";
+      h += '<div class="sec"><header><h2>Jacob M. · development plan</h2><span>coach input</span></header>' +
+        linkRow("His four targets", "One per corner · set in Block One", "idp", true) +
+        linkRow("Week 8 review", "Coach and self ratings · 1 gap to talk about", "idp", false) + "</div>";
+      h += '<div class="sec"><header><h2>Four corners · Jacob M.</h2></header>' +
+        CORNERS.map(function (c) {
+          return '<button data-corner="' + c.k + '" class="row" style="cursor:pointer;width:100%;text-align:left;color:var(--ink);flex-direction:column;align-items:stretch;gap:7px">' +
+            '<span style="display:flex;align-items:baseline;gap:8px"><b class="grow" style="font:700 14px/1 var(--head);letter-spacing:.06em;text-transform:uppercase">' + c.name + "</b>" +
+            '<span style="font-size:12px;font-weight:600;color:' + (c.level === 4 ? "var(--lime)" : "var(--muted)") + '">' + LEVELS[c.level - 1] + "</span></span>" +
+            track(c.level, 4) + "</button>";
+        }).join("") + "</div>";
+    }
+    return h;
+  };
+
+  function loggedWk(wk) {
+    return state.logs.some(function (l) { return l.wk === wk && l.team === state.team; });
+  }
+  function syllabusBlock() {
+    var cur = blockWeek();
+    var s = weekInfo(cur), b = s.block;
+    var h = '<div class="card" style="padding:16px;border-color:var(--lime-line);background:var(--lime-dim)">' +
+      '<span class="kicker">Block ' + b.n + " · week " + cur + " of " + BLOCK.weeks + " · " + esc(weekDate(cur)) + "</span>" +
+      '<h3 style="margin-top:7px;font:400 23px/1.04 var(--display);text-transform:uppercase">' + esc(s.title) + "</h3>" +
+      '<p class="sub" style="margin-top:5px;font-size:12px">' + esc(prettyRange(b)) + "</p>" +
+      '<p style="margin-top:8px;font-size:14px;line-height:1.45;color:var(--soft)">' + esc(s.obj) + "</p>" +
+      '<p class="sub" style="margin-top:9px;font-size:12px">The block and week advance on their own from today’s date.</p></div>';
+
+    h += '<div class="sec"><header><h2>What this block covers</h2><span>four corners</span></header>' +
+      Object.keys(b.c).map(function (k) {
+        return '<div class="row" style="flex-direction:column;align-items:stretch;gap:5px">' +
+          '<span class="kicker">' + esc(k) + "</span>" +
+          '<span style="font-size:13px;line-height:1.4;color:var(--soft)">' + esc(b.c[k]) + "</span></div>";
+      }).join("") + "</div>";
+
+    h += '<div class="sec" style="gap:8px">';
+    partsFor(s).forEach(function (p) {
+      h += '<div class="row" style="align-items:flex-start">' +
+        '<span style="flex:none;width:34px;font:400 17px/1 var(--display);color:var(--lime)">' + p.t + "</span>" +
+        '<span class="grow"><b style="display:block;font:700 15px/1.15 var(--head);letter-spacing:.03em;text-transform:uppercase">' + esc(p.name) + "</b>" +
+        '<span class="sub" style="display:block;margin-top:3px;font-size:12px">' + p.mins + " min</span>" +
+        '<span style="display:block;margin-top:6px;padding-left:9px;border-left:3px solid var(--lime);font-size:13px;line-height:1.4;color:var(--soft)">' + esc(p.points) + "</span></span></div>";
+    });
+    h += "</div>";
+
+    h += '<div class="card" style="padding:15px 16px"><span class="kicker" style="color:var(--muted)">' +
+      (s.review ? "Week 8 · mastery check" : "Benchmark this week") + "</span>" +
+      '<p style="margin-top:6px;font-size:14px;line-height:1.4">' + esc(s.review ? "All mastery tests, plus player reviews for every child." : s.bench) + "</p></div>" +
+      '<div class="card" style="padding:15px 16px"><span class="kicker" style="color:var(--muted)">If numbers are low</span>' +
+      '<p style="margin-top:6px;font-size:14px;line-height:1.4">Drop to 5v5 with two neutral pivots. Keep the objective, shrink the pitch.</p></div>' +
+      '<div class="card" style="padding:15px 16px"><span class="kicker" style="color:var(--muted)">Home challenge</span>' +
+      '<p style="margin-top:6px;font-size:14px;line-height:1.4">' + esc(s.home) + "</p></div>" +
+      '<div class="btns"><button class="btn" data-go="logsession">' + (loggedWk(cur) ? "Log again" : "Log this session") + "</button>" +
+      '<button class="btn ghost" data-go="stats">Record scores</button></div>';
+
+    h += '<div class="sec"><header><h2>Block ' + b.n + " weeks</h2><span>" + state.logs.length + " logged</span></header>";
+    for (var wk = 1; wk <= BLOCK.weeks; wk++) {
+      var done = loggedWk(wk), past = wk < cur, now = wk === cur;
+      h += '<div class="row"' + (now ? ' style="border-color:var(--lime-line)"' : "") + ">" +
+        '<span class="dot' + (done ? "" : past ? " off" : " dim") + '"></span>' +
+        '<span style="flex:none;font:700 12px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;color:' + (now ? "var(--lime)" : "var(--muted)") + ';width:40px">Wk ' + wk + "</span>" +
+        '<span class="grow"><b style="display:block;font-size:14px;font-weight:600">' + esc(wk === BLOCK.weeks ? "Block review" : "Session " + wk) + "</b>" +
+        '<span class="sub" style="display:block;margin-top:1px;font-size:12px">' + esc(weekDate(wk)) + "</span></span>" +
+        '<span class="sub" style="flex:none;font-size:12px;color:' + (done ? "var(--lime)" : "var(--muted)") + '">' +
+        (done ? "Logged" : past ? "Not logged" : now ? "This week" : "To come") + "</span></div>";
+    }
+    h += "</div>";
+
+    h += '<div class="sec"><header><h2>The season</h2><span>5 blocks</span></header>' +
+      BLOCKS.map(function (x) {
+        var isNow = x.n === b.n;
+        return '<div class="row"' + (isNow ? ' style="border-color:var(--lime-line)"' : "") + ">" +
+          '<span class="dot' + (isNow ? "" : " dim") + '"></span>' +
+          '<span style="flex:none;font:700 12px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;color:' + (isNow ? "var(--lime)" : "var(--muted)") + ';width:46px">Blk ' + x.n + "</span>" +
+          '<span class="grow"><b style="display:block;font-size:14px;font-weight:600">' + esc(x.name) + "</b>" +
+          '<span class="sub" style="display:block;margin-top:1px;font-size:12px">' + esc(prettyRange(x)) + "</span></span></div>";
+      }).join("") + "</div>";
+
+    if (state.logs.length) {
+      h += '<div class="sec"><header><h2>Session log</h2><span>most recent first</span></header>' +
+        state.logs.slice(0, 4).map(function (l) {
+          return '<div class="row" style="align-items:flex-start"><span class="dot"></span>' +
+            '<span class="grow"><b style="display:block;font-size:14px;font-weight:600">Wk ' + l.wk + " · " + esc(l.title) + "</b>" +
+            '<span class="sub" style="display:block;margin-top:2px;font-size:12px">' + esc(l.date) + " · " + esc(teamBy(l.team).name) + " · " + l.players + " players · objective " + esc(l.ach.toLowerCase()) + "</span>" +
+            (l.keep ? '<span style="display:block;margin-top:5px;font-size:13px;line-height:1.35;color:var(--soft)">Keep: ' + esc(l.keep) + "</span>" : "") +
+            (l.change ? '<span style="display:block;margin-top:2px;font-size:13px;line-height:1.35;color:var(--soft)">Change: ' + esc(l.change) + "</span>" : "") +
+            "</span></div>";
+        }).join("") + "</div>";
+    }
+    return h;
+  }
+
+  V.logsession = function () {
+    var cur = blockWeek(), s = weekInfo(cur);
+    var fld = function (id, label, type, val, hint) {
+      return '<div style="display:flex;flex-direction:column;gap:6px">' +
+        '<label for="' + id + '" style="font:700 11px/1 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)">' + label + "</label>" +
+        (hint ? '<span class="sub" style="font-size:12px;margin-top:-2px">' + hint + "</span>" : "") +
+        (type === "area"
+          ? '<textarea id="' + id + '" rows="3" style="background:#0D160F;color:var(--ink);border:1px solid #556855;border-radius:12px;padding:11px 12px;font-size:16px;resize:vertical"></textarea>'
+          : '<input id="' + id + '" type="' + type + '" value="' + esc(val || "") + '" style="background:#0D160F;color:var(--ink);border:1px solid #556855;border-radius:12px;padding:0 12px;min-height:48px;font-size:16px">') +
+        "</div>";
+    };
+    return '<div class="title"><span class="eyebrow">Block ' + BLOCK.n + " · week " + cur + " of " + BLOCK.weeks + '</span><h1>Log this session</h1>' +
+      '<p>' + esc(s.title) + "</p></div>" +
+      '<form id="logform" style="display:flex;flex-direction:column;gap:16px">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+          fld("lf-date", "Date", "date", weekIso(cur)) +
+          fld("lf-n", "Players", "number", "16") +
+        "</div>" +
+        fld("lf-coach", "Coach", "text", "Ryan C.") +
+        '<div style="display:flex;flex-direction:column;gap:8px">' +
+          '<span style="font:700 11px/1 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)">Objective achieved?</span>' +
+          '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px" role="radiogroup" aria-label="Objective achieved">' +
+          ["Yes", "Partly", "No"].map(function (v, i) {
+            return '<button type="button" class="chip" data-ach="' + v + '" role="radio" aria-checked="' + (i === 0) + '" style="justify-content:center;height:44px' + (i === 0 ? ";background:var(--lime);border-color:var(--lime);color:var(--on-lime)" : "") + '">' + v + "</button>";
+          }).join("") + "</div></div>" +
+        fld("lf-ev", "What evidence did you see?", "area") +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+          fld("lf-keep", "One thing to keep", "text") +
+          fld("lf-change", "One thing to change", "text") +
+        "</div>" +
+        fld("lf-play", "Players needing a different challenge", "text", "", "First names or initials only.") +
+        fld("lf-int", "Interventions that worked", "text") +
+        (loggedWk(cur) ? '<div class="row lit" style="font-size:13px;line-height:1.4">You have already logged week ' + cur + " for " + esc(teamBy(state.team).name) + ". Saving adds another entry.</div>" : "") +
+        '<button class="btn" type="submit">Save to log</button>' +
+      "</form>";
+  };
+
+  V.cpd = function () {
+    var all = 0, got = 0, ev = 0;
+    CPD.forEach(function (m) { m.steps.forEach(function (s) { all++; if (s.done) got++; if (s.ev && !s.done) ev++; }); });
+    var pct = Math.round(got * 100 / all);
+    return '<div class="title"><span class="eyebrow">Your pathway · 2026–27</span><h1>Coach development</h1>' +
+      '<p>Short steps you work through, then evidence on the grass.</p></div>' +
+      '<div class="card" style="padding:16px">' +
+        '<div style="display:flex;align-items:baseline"><span class="grow" style="font:400 23px/1 var(--display);text-transform:uppercase;color:var(--lime)">' + got + " of " + all + " steps</span>" +
+        '<span class="sub" style="font-size:12px;font-weight:600">' + pct + '%</span></div>' +
+        '<div class="bar" style="margin-top:11px"><i style="width:' + pct + '%"></i></div>' +
+        '<div class="tiles c3" style="margin-top:14px">' +
+          '<div class="tile" style="padding:11px"><b class="tnum" style="font-size:24px">6</b><span>Week streak</span></div>' +
+          '<div class="tile lit" style="padding:11px"><b class="tnum" style="font-size:24px">4</b><span>Recall due</span></div>' +
+          '<div class="tile" style="padding:11px"><b class="tnum" style="font-size:24px">' + ev + '</b><span>Portfolio to do</span></div>' +
+        "</div>" +
+        '<button class="btn" style="margin-top:14px" data-act="recall">Start recall · 4 cards</button></div>' +
+      CPD.map(function (m) {
+        var mg = m.steps.filter(function (s) { return s.done; }).length;
+        return '<div class="sec"><header><h2>' + esc(m.m) + "</h2><span>" + mg + "/" + m.steps.length + "</span></header>" +
+          m.steps.map(function (s) {
+            return '<div class="row" style="align-items:flex-start">' +
+              '<span style="flex:none;display:grid;place-items:center;width:22px;height:22px;margin-top:1px;border-radius:6px;' +
+              (s.done ? "background:var(--lime);color:var(--on-lime)" : "background:var(--surface2);border:1px solid var(--line2);color:var(--muted)") +
+              ';font:700 11px/1 var(--head)">' + (s.done ? "✓" : "") + "</span>" +
+              '<span class="grow"><b style="display:block;font-size:14px;font-weight:600;line-height:1.3">' + esc(s.t) + "</b>" +
+              '<span class="sub" style="display:block;margin-top:3px;font-size:12px;line-height:1.35">' + esc(s.why) + "</span>" +
+              '<span style="display:flex;gap:6px;margin-top:7px"><span class="tag" style="height:22px;padding:0 9px;font-size:11px">' + s.mins + " min</span>" +
+              (s.ev ? '<span class="tag lime" style="height:22px;padding:0 9px;font-size:11px">Portfolio</span>' : "") +
+              (s.done ? '<span class="tag" style="height:22px;padding:0 9px;font-size:11px">Rated ' + RATE[2] + "</span>" : "") +
+              "</span></span></div>";
+          }).join("") + "</div>";
+      }).join("");
+  };
+
+  V.idp = function () {
+    return '<div class="title"><span class="eyebrow">Jacob Mitchell · U15 Falcons</span><h1>Development plan</h1>' +
+      '<p>One target per corner, set in Block One weeks 1–2 and shared with his parents.</p></div>' +
+      '<div class="sec"><header><h2>His four targets</h2><span>coach sets these</span></header>' +
+      IDP.map(function (d) {
+        return '<div class="card" style="padding:14px 16px">' +
+          '<div style="display:flex;align-items:baseline;gap:8px"><span class="kicker grow">' + esc(d.c) + "</span>" +
+          '<span class="sub" style="font-size:12px;font-weight:600">' + STAGES[d.stage - 1] + "</span></div>" +
+          '<p style="margin-top:7px;font-size:15px;font-weight:600;line-height:1.35">' + esc(d.t) + "</p>" +
+          '<div style="margin-top:11px">' + track(d.stage, 4) + "</div></div>";
+      }).join("") +
+      '<button class="btn ghost" data-act="target">Add or change a target</button></div>' +
+      '<div class="sec"><header><h2>Week 8 review</h2><span>coach vs self</span></header>' +
+      '<p class="sub" style="padding:0 2px;font-size:13px;line-height:1.45">Rate each corner Working towards, Achieved or Exceeding. Players self-rate the same week, so the gap is the conversation.</p>' +
+      IDP.map(function (d) {
+        var gap = d.coach !== d.self;
+        return '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px' + (gap ? ";border-color:var(--lime-line)" : "") + '">' +
+          '<span style="display:flex;align-items:baseline;gap:8px"><b class="grow" style="font:700 14px/1 var(--head);letter-spacing:.06em;text-transform:uppercase">' + esc(d.c) + "</b>" +
+          (gap ? '<span class="tag lime" style="height:20px;padding:0 8px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-family:var(--head);font-weight:700">Gap</span>' : "") + "</span>" +
+          '<span style="display:flex;gap:7px;flex-wrap:wrap">' +
+          '<span class="tag" style="font-size:12px"><span style="color:var(--muted);margin-right:5px">Coach</span>' + esc(d.coach) + "</span>" +
+          '<span class="tag" style="font-size:12px"><span style="color:var(--muted);margin-right:5px">Jacob</span>' + esc(d.self) + "</span></span></div>";
+      }).join("") + "</div>" +
+      '<div class="card" style="padding:15px 16px"><span class="kicker" style="color:var(--muted)">Also due this block</span>' +
+      '<p style="margin-top:6px;font-size:14px;line-height:1.45;color:var(--soft)">Peer-observe one session from another coach, and log it to your portfolio.</p></div>';
+  };
+
+  V.stats = function () {
+    function board(key, label) {
+      return '<div class="sec" style="gap:7px"><header><h2>' + label + "</h2></header>" +
+        STATS[key].map(function (r, i) {
+          return '<div class="row" style="padding:9px 14px">' +
+            '<span class="tnum" style="flex:none;width:20px;font:700 13px/1 var(--head);color:' + (i === 0 ? "var(--lime)" : "var(--muted)") + '">' + (i + 1) + "</span>" +
+            '<span class="grow" style="font-size:14px;font-weight:600">' + esc(r[0]) + "</span>" +
+            '<span class="tnum" style="flex:none;font:400 19px/1 var(--display);color:' + (i === 0 ? "var(--lime)" : "var(--ink)") + '">' + r[1] + "</span></div>";
+        }).join("") + "</div>";
+    }
+    return '<div class="title"><span class="eyebrow">Falcons U15 · season so far</span><h1>Player stats</h1></div>' +
+      '<div class="tiles c3">' +
+        '<div class="tile"><b class="tnum">11</b><span>Played</span></div>' +
+        '<div class="tile lit"><b class="tnum">7</b><span>Won</span></div>' +
+        '<div class="tile"><b class="tnum">31</b><span>Goals for</span></div></div>' +
+      board("goals", "Goals") + board("assists", "Assists") + board("apps", "Games") +
+      '<div class="sec"><header><h2>Full squad</h2><span>goals · assists · games</span></header>' +
+      SQUAD.slice(0, 8).map(function (p, i) {
+        var g = [5, 7, 2, 4, 9, 1, 0, 2][i], a = [8, 1, 5, 0, 3, 4, 2, 1][i], ap = [11, 10, 11, 10, 9, 8, 7, 9][i];
+        return '<div class="row" style="padding:10px 14px"><span class="av" style="width:32px;height:32px;font-size:12px;border-width:1px">' + p.in + "</span>" +
+          '<span class="grow" style="font-size:14px;font-weight:600">' + esc(p.n) + "</span>" +
+          '<span class="tnum" style="flex:none;display:flex;gap:12px;font-size:14px;font-weight:600;color:var(--soft)">' +
+          '<span style="width:16px;text-align:right">' + g + '</span><span style="width:16px;text-align:right">' + a + '</span>' +
+          '<span style="width:20px;text-align:right;color:var(--muted)">' + ap + "</span></span></div>";
+      }).join("") + "</div>";
+  };
+
+  V.match = function () {
+    var yes = availCount("yes"), no = availCount("no"), none = availCount("none");
+    var h = '<div class="title"><span class="eyebrow">Saturday 1 November</span><h1>Match Hub</h1></div>' +
+      '<div class="scroller">' + TEAMS.map(function (t) {
+        return '<button class="chip' + (t.id === state.team ? " on" : "") + '" data-team="' + t.id + '">' + esc(t.name) + "</button>";
+      }).join("") + "</div>" +
+      '<div class="card" style="overflow:hidden">' +
+        '<div style="display:flex;align-items:center;gap:8px;padding:11px 15px;border-bottom:1px solid var(--line)">' +
+          '<span class="tag lime" style="height:20px;padding:0 8px;border-radius:4px;font:700 10px/1 var(--head);letter-spacing:.12em;text-transform:uppercase;background:var(--lime);color:var(--on-lime);border:0">Home</span>' +
+          '<span class="sub">League · Pitch 1</span></div>' +
+        '<div style="display:flex;align-items:center;padding:18px 15px 16px">' +
+          side(teamBy(state.team).name, true) +
+          '<span style="flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 10px">' +
+            '<span class="tnum" style="font:400 30px/1 var(--display)">10:00</span>' +
+            '<span style="font:700 11px/1 var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--lime)">Arrive 09:30</span></span>' +
+          side("Hale End", false) + "</div>" +
+        mapRow({ pitch: "Pitch 1", sub: "Hale Lane, N20 8AB · 14 min drive", flat: true }) +
+      "</div>" +
+      '<div class="tiles c3">' +
+        '<div class="tile lit"><b class="tnum">' + yes + "</b><span>Available</span></div>" +
+        '<div class="tile"><b class="tnum">' + no + "</b><span>Unavailable</span></div>" +
+        '<div class="tile"><b class="tnum">' + none + "</b><span>No reply</span></div></div>" +
+      '<div class="sec"><header><h2>Who’s coming</h2><span>tap to change</span></header>';
+    SQUAD.slice(0, 6).forEach(function (p) {
+      var a = state.avail[p.in] || p.a;
+      h += '<div class="row"><span class="av" style="width:36px;height:36px;font-size:13px;border-width:1px">' + p.in + "</span>" +
+        '<span class="grow" style="font-size:15px;font-weight:600">' + esc(p.n) + "</span>" +
+        '<span style="flex:none;display:flex;gap:5px">' +
+        availBtn(p.in, "yes", "In", a) + availBtn(p.in, "no", "Out", a) + "</span></div>";
+    });
+    h += '<p class="sub" style="padding-left:4px">' + (SQUAD.length - 6) + " more in the full squad sheet</p></div>" +
+      '<div class="btns"><button class="btn" data-go="tactics">Pick squad</button>' +
+      '<button class="btn ghost" data-go="checkin">' + ICON.pin.replace('width="21" height="21"', 'width="14" height="14"') + "Check in</button></div>" +
+      '<div class="sec"><header><h2>Season so far</h2></header>' +
+      linkRow("Player stats", "Goals, assists and games · 11 played", "stats", false) + "</div>";
+    return h;
+  };
+  function side(name, home) {
+    return '<span class="grow" style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0">' +
+      '<span style="display:grid;place-items:center;width:40px;height:40px;border-radius:10px;' +
+      (home ? "background:var(--lime);color:var(--on-lime)" : "background:var(--surface2);border:1px solid var(--line2);color:var(--muted)") +
+      ';font:700 14px/1 var(--head)">' + esc(home ? "B2B" : "HE") + "</span>" +
+      '<span style="font:700 14px/1.1 var(--head);letter-spacing:.06em;text-transform:uppercase;text-align:center">' + esc(name) + "</span></span>";
+  }
+  function availBtn(id, val, label, cur) {
+    var on = cur === val;
+    return '<button class="chip" data-av="' + id + '" data-val="' + val + '" style="height:30px;padding:0 11px;font-size:11px;' +
+      (on ? "background:var(--lime);border-color:var(--lime);color:var(--on-lime)" : "") + '" aria-pressed="' + on + '">' + label + "</button>";
+  }
+
+  V.tactics = function () {
+    var h = '<div class="title"><span class="eyebrow">Match plan · v Hale End</span><h1>Tactics Hub</h1>' +
+      '<p>Open to head coaches and assistants.</p></div>' +
+      '<div class="card" style="padding:14px 14px 16px">' +
+        '<div style="display:flex;align-items:baseline;margin-bottom:12px"><span class="grow" style="font:700 13px/1 var(--head);letter-spacing:.18em;text-transform:uppercase">Shape</span>' +
+        '<span style="font:400 20px/1 var(--display);color:var(--lime)">4-3-3</span></div>' +
+        '<div class="pitch"><i class="ln" style="left:50%;top:0;width:1px;height:100%"></i>' +
+        '<i class="ln" style="left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border:1px solid #243024;border-radius:99px;background:none"></i>' +
+        '<i class="ln" style="left:0;top:50%;width:36px;height:84px;margin-top:-42px;border:1px solid #243024;border-left:0;background:none"></i>' +
+        '<i class="ln" style="right:0;top:50%;width:36px;height:84px;margin-top:-42px;border:1px solid #243024;border-right:0;background:none"></i>' +
+        SHAPE.map(function (p) {
+          return '<span class="pl' + (p.gk ? " gk" : "") + '" style="left:' + p.x + "%;top:" + p.y + '%">' + p.n + "</span>";
+        }).join("") + "</div></div>" +
+      '<div class="sec"><header><h2>Game principles</h2></header>' +
+      PRINCIPLES.map(function (g) {
+        return '<div style="display:flex;flex-direction:column;gap:7px"><span class="kicker">' + esc(g.ph) + "</span>" +
+          '<span class="tags">' + g.items.map(function (i) { return '<span class="tag">' + esc(i) + "</span>"; }).join("") + "</span></div>";
+      }).join("") + "</div>" +
+      '<button class="btn" data-go="match">Open full match plan</button>';
+    return h;
+  };
+
+  V.checkin = function () {
+    var h = '<div class="title"><span class="eyebrow">Tuesday 27 October</span><h1>Check in</h1></div>' +
+      '<div class="card" style="overflow:hidden">' +
+        '<div style="padding:14px 15px 12px"><span class="kicker">Starts 18:30 · 75 min</span>' +
+        '<b style="display:block;margin-top:5px;font-size:16px;font-weight:600">' + esc(weekInfo(blockWeek()).tech) + "</b>" +
+        '<span class="sub" style="display:block;margin-top:2px">Falcons U15 · 16 players</span></div>' +
+        mapRow({ pitch: "Pitch 3", flat: true }) +
+        '<div style="padding:14px 15px 16px;border-top:1px solid var(--line)">' +
+        (state.checkedIn
+          ? '<button class="btn ghost" data-act="checkout">Check out</button>' +
+            '<p class="sub" style="margin-top:10px;text-align:center;font-size:12px">In at ' + esc(state.inAt) + " · GPS verified, 28 m from the pitch</p>"
+          : '<button class="btn" data-act="checkin">' + ICON.pin.replace('width="21" height="21"', 'width="16" height="16"') + "GPS check in</button>" +
+            '<p class="sub" style="margin-top:10px;text-align:center;font-size:12px">Your location is checked against the venue once, at the moment you tap.</p>') +
+        "</div></div>";
+
+    if (state.checkedIn) {
+      h += '<div class="sec"><header><h2>Still checked in</h2></header>' +
+        '<div class="row lit"><span class="grow"><b style="display:block;font-size:15px;font-weight:600">Falcons U15 · ' + esc(VENUE.pitch) + "</b>" +
+        '<span style="display:block;margin-top:2px;font-size:12px;color:var(--lime)">In ' + esc(state.inAt) + ' · GPS verified, 28 m</span></span>' +
+        '<button class="btn sm" data-act="checkout">Check out</button></div></div>';
+    }
+
+    var hist = state.log.concat([
+      { t: "Falcons U15 · Thu 23 Oct", s: "In 18:28 · Out 19:47 · GPS verified", k: "ok" },
+      { t: "Titans U12 · Tue 21 Oct", s: "In 17:55 · 1.2 km from venue · flagged", k: "far" },
+      { t: "Elite U13 · Sat 18 Oct", s: "In 09:58 · Out 11:30 · venue spot not set", k: "unk" }
+    ]);
+    h += '<div class="sec"><header><h2>Your history</h2><span>feeds your statement</span></header>' +
+      hist.map(function (r) {
+        return '<div class="row"><span class="dot' + (r.k === "far" ? " off" : r.k === "unk" ? " dim" : "") + '"></span>' +
+          '<span class="grow"><b style="display:block;font-size:14px;font-weight:600">' + esc(r.t) + "</b>" +
+          '<span class="sub" style="display:block;margin-top:1px;font-size:12px">' + esc(r.s) + "</span></span></div>";
+      }).join("") + "</div>";
+    return h;
+  };
+
+  V.director = function () {
+    return '<div class="title"><span class="eyebrow">Academy · season week 9</span><h1>Director Hub</h1></div>' +
+      '<div class="tiles">' +
+        '<div class="tile"><b class="tnum">58</b><span>Players</span></div>' +
+        '<div class="tile"><b class="tnum">4</b><span>Teams</span></div>' +
+        '<div class="tile"><b class="tnum">11</b><span>Sessions this week</span></div>' +
+        '<div class="tile lit"><b class="tnum">6</b><span>Reviews overdue</span></div></div>' +
+      '<div class="sec"><header><h2>Teams</h2></header>' +
+      TEAMS.map(function (t) {
+        return '<button class="row" data-go="develop" style="cursor:pointer;text-align:left;width:100%;color:var(--ink)' + (t.ok ? "" : ";border-color:var(--lime-line)") + '">' +
+          '<span class="dot' + (t.ok ? "" : " off") + '"></span><span class="grow">' +
+          '<b style="display:block;font:700 16px/1 var(--head);letter-spacing:.04em;text-transform:uppercase">' + esc(t.name) + "</b>" +
+          '<span class="sub" style="display:block;margin-top:2px">' + esc(t.coach) + " · " + t.n + " players</span></span>" +
+          '<span style="flex:none;font-size:12px;font-weight:' + (t.ok ? "600;color:var(--muted)" : "700;color:var(--ink)") + '">' + esc(t.ok ? "On track" : t.note) + "</span></button>";
+      }).join("") + "</div>" +
+      '<div class="sec"><header><h2>Money</h2></header>' +
+      linkRow("Coach statements", "From GPS verified check-ins · 4 to approve", "coaches", true) + "</div>" +
+      '<button class="btn" data-go="coaches">Academy report</button>';
+  };
+
+  V.playerHome = function () {
+    var r = rankOf(state.xp);
+    return '<div class="title"><span class="eyebrow">Tuesday 27 October</span><h1>Your week</h1></div>' +
+      '<div class="card" style="padding:15px 16px"><div style="display:flex;align-items:center;gap:8px">' +
+        '<span style="color:var(--lime)">' + ICON.cup.replace('width="21" height="21"', 'width="15" height="15"') + "</span>" +
+        '<span class="grow" style="font:700 15px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;color:var(--lime)">' + esc(r.name) + "</span>" +
+        '<span class="tnum" style="font:400 19px/1 var(--display)">' + state.xp + ' XP</span></div>' +
+        '<div class="bar" style="margin-top:10px"><i style="width:' + r.pct + '%"></i></div>' +
+        '<span class="sub" style="display:block;margin-top:7px;font:700 11px/1 var(--head);letter-spacing:.12em;text-transform:uppercase">' +
+        (r.next ? r.need + " XP to " + esc(r.next) : "Top rank") + " · rank " + (r.i + 1) + ' of 10</span></div>' +
+      oneThing() +
+      '<div class="sec"><header><h2>This week</h2></header>' +
+        '<div class="row"><span class="tnum" style="flex:none;font:400 18px/1 var(--display);color:var(--lime)">18:30</span>' +
+        '<span style="flex:none;width:1px;height:32px;background:#262626"></span>' +
+        '<span class="grow"><b style="display:block;font-size:15px;font-weight:600">Training · Tuesday</b>' +
+        '<span class="sub" style="display:block;margin-top:2px">' + esc(VENUE.pitch) + ' · shin pads and water</span></span></div>' +
+        '<button class="row" data-go="match" style="cursor:pointer;text-align:left;width:100%;color:var(--ink)">' +
+        '<span class="tnum" style="flex:none;font:400 18px/1 var(--display);color:var(--lime)">10:00</span>' +
+        '<span style="flex:none;width:1px;height:32px;background:#262626"></span>' +
+        '<span class="grow"><b style="display:block;font-size:15px;font-weight:600">Match v Hale End</b>' +
+        '<span class="sub" style="display:block;margin-top:2px">Saturday · arrive 09:30</span></span>' +
+        '<span style="flex:none;color:var(--muted)">' + ICON.chev + "</span></button></div>";
+  };
+  function oneThing() {
+    var c = cornerBy("technical");
+    return '<div class="card" style="padding:14px 16px 15px"><div style="display:flex;align-items:center;gap:8px">' +
+      '<span class="kicker grow">One thing this week</span>' +
+      '<span class="tag" style="height:20px;padding:0 8px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-family:var(--head);font-weight:700">Technical · +15 XP</span></div>' +
+      '<p style="margin-top:8px;font-size:15px;font-weight:600;line-height:1.35">' + esc(c.target) + " Ten times, each foot, before Thursday.</p>" +
+      (state.done
+        ? '<div class="row lit" style="margin-top:12px;justify-content:center;gap:7px;color:var(--lime);font:700 13px/1 var(--head);letter-spacing:.1em;text-transform:uppercase">' + ICON.tick + "Done · coach notified</div>"
+        : '<button class="btn" style="margin-top:12px;min-height:42px" data-act="done">' + ICON.tick + "I did it</button>");
+  }
+
+  V.passport = function () {
+    var r = rankOf(state.xp);
+    var who = state.role === "parent" ? "Jacob’s passport" : "My passport";
+    return '<div class="title"><span class="eyebrow">' + esc(who) + '</span><h1>Player Passport</h1></div>' +
+      '<div class="card" style="overflow:hidden;border-bottom:3px solid var(--lime)">' +
+        '<div style="display:flex;align-items:center;gap:14px;padding:16px 16px 14px">' +
+          '<span class="av on" style="width:58px;height:58px;font-size:21px">JM</span>' +
+          '<span class="grow"><b style="display:block;font:400 25px/1.02 var(--display);text-transform:uppercase">Jacob Mitchell</b>' +
+          '<span style="display:block;margin-top:3px;font:700 12px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">U15 Falcons · Midfielder · 8</span></span></div>' +
+        '<div style="padding:12px 16px 14px;border-top:1px solid var(--line);background:#101310">' +
+          '<div style="display:flex;align-items:center;gap:8px"><span style="color:var(--lime)">' + ICON.cup.replace('width="21" height="21"', 'width="15" height="15"') + "</span>" +
+          '<span class="grow" style="font:700 15px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;color:var(--lime)">' + esc(r.name) + "</span>" +
+          '<span class="tnum" style="font:400 19px/1 var(--display)">' + state.xp + ' XP</span></div>' +
+          '<div class="bar" style="margin-top:10px"><i style="width:' + r.pct + '%"></i></div>' +
+          '<span class="sub" style="display:block;margin-top:7px;font:700 11px/1 var(--head);letter-spacing:.12em;text-transform:uppercase">' +
+          (r.next ? r.need + " XP to " + esc(r.next) : "Top rank") + " · rank " + (r.i + 1) + ' of 10</span></div></div>' +
+      '<div class="sec"><header><h2>Four corners</h2><span>tap one</span></header>' +
+        '<div class="tiles">' + CORNERS.map(function (c) {
+          return '<button class="tile' + (c.level === 4 ? " lit" : "") + '" data-corner="' + c.k + '" style="cursor:pointer;text-align:left;color:var(--ink)">' +
+            '<b style="font:700 14px/1.1 var(--head);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)">' + c.name + "</b>" +
+            '<span style="margin-top:3px;font-size:12px;font-weight:600;color:var(--lime);font-family:var(--body);letter-spacing:0;text-transform:none">' +
+            LEVELS[c.level - 1] + (c.level === 4 ? " · complete" : "") + "</span>" +
+            '<span style="display:block;margin-top:9px">' + track(c.level, 4) + "</span></button>";
+        }).join("") + "</div></div>" +
+      oneThing() +
+      '<div class="sec"><header><h2>My best ever</h2><span>only against yourself</span></header>' +
+        best("Keep-ups, best of three", "34", "was 27") + best("First touch into a 1 m gate", "8", "of 10") + "</div>";
+  };
+  function best(n, v, note) {
+    return '<div class="row"><span class="grow" style="font-size:14px;font-weight:600">' + esc(n) + "</span>" +
+      '<span class="tnum" style="flex:none;font:400 22px/1 var(--display);color:var(--lime)">' + v + "</span>" +
+      '<span class="sub" style="flex:none;font-size:12px">' + esc(note) + "</span></div>";
+  }
+
+  V.corner = function () {
+    var c = cornerBy(state.corner);
+    var h = '<div class="title"><span class="eyebrow">Corner ' + (CORNERS.indexOf(c) + 1) + ' of 4</span><h1>' + c.name + "</h1>" +
+      '<p>' + esc(c.desc) + "</p></div>" +
+      '<div class="card" style="padding:14px 16px 15px">' +
+        '<div style="display:flex;align-items:baseline"><span class="grow" style="font:400 23px/1 var(--display);text-transform:uppercase;color:var(--lime)">' + LEVELS[c.level - 1] + "</span>" +
+        '<span class="sub" style="font-size:12px;font-weight:600">' + (c.level < 4 ? (4 - c.level) + " targets to " + LEVELS[c.level] : "Complete") + "</span></div>" +
+        '<div style="margin-top:11px">' + track(c.level, 4) + "</div>" +
+        '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:7px">' +
+        LEVELS.map(function (l, i) {
+          return '<span style="font:700 9px/1.2 var(--head);letter-spacing:.04em;text-transform:uppercase;color:' + (i === c.level - 1 ? "var(--lime)" : "var(--muted)") + '">' + l + "</span>";
+        }).join("") + "</div></div>" +
+      '<div class="card" style="padding:14px 16px 15px;background:var(--lime-dim);border-color:var(--lime-line)">' +
+        '<span class="kicker">My target right now</span>' +
+        '<p style="margin-top:7px;font-size:15px;font-weight:600;line-height:1.35">' + esc(c.target) + "</p>" +
+        '<div style="margin-top:12px">' + track(c.stage, 4) + "</div>" +
+        '<span style="display:block;margin-top:8px;font-size:12px;font-weight:600;color:var(--lime)">' + STAGES[c.stage - 1] +
+        (c.stage < 4 ? " · next is " + STAGES[c.stage].toLowerCase() : "") + "</span></div>" +
+      '<div class="sec"><header><h2>What the coach saw</h2></header>' +
+      c.saw.map(function (s) {
+        return '<div class="row" style="align-items:flex-start"><span class="dot' + (s.xp ? "" : " dim") + '" style="margin-top:6px"></span>' +
+          '<span class="grow"><span style="display:block;font-size:14px;line-height:1.35">' + esc(s.t) + "</span>" +
+          '<span style="display:block;margin-top:4px;font:700 11px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">' +
+          esc(s.by) + " · " + esc(s.d) + (s.xp ? " · +" + s.xp + " XP" : "") + "</span></span></div>";
+      }).join("") + "</div>";
+    if (c.tests.length) {
+      h += '<div class="sec"><header><h2>Skills tests</h2></header>' +
+        c.tests.map(function (t) {
+          return '<div class="row"><span class="grow" style="font-size:14px;font-weight:600">' + esc(t.n) + "</span>" +
+            '<span class="tnum" style="flex:none;font:400 19px/1 var(--display)">' + esc(t.s) + "</span>" +
+            '<span class="tag' + (t.lvl === "Silver" || t.lvl === "Gold" ? " lime" : "") + '" style="height:22px;padding:0 9px;font:700 10px/1 var(--head);letter-spacing:.1em;text-transform:uppercase">' + t.lvl + "</span></div>";
+        }).join("") + "</div>";
+    }
+    return h;
+  };
+
+  V.parentHome = function () {
+    return '<div class="title"><span class="eyebrow">Week beginning 27 October</span><h1>Your player</h1></div>' +
+      '<button class="row" data-go="passport" style="cursor:pointer;width:100%;text-align:left;color:var(--ink);padding:14px 16px;border-radius:var(--r-card)">' +
+        '<span class="av on" style="width:54px;height:54px;font-size:20px">JM</span>' +
+        '<span class="grow"><b style="display:block;font:400 22px/1.05 var(--display);text-transform:uppercase">Jacob Mitchell</b>' +
+        '<span class="sub" style="display:block;margin-top:3px">U15 Falcons · Midfielder · #8</span></span>' +
+        '<span style="flex:none;color:var(--muted)">' + ICON.chev + "</span></button>" +
+      '<div class="sec"><header><h2>This week</h2></header>' +
+        '<div class="row"><span style="flex:none;display:flex;flex-direction:column;align-items:center;width:44px">' +
+        '<span style="font:700 11px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Tue</span>' +
+        '<span class="tnum" style="font:400 24px/1 var(--display)">28</span></span>' +
+        '<span style="flex:none;width:1px;height:34px;background:#262626"></span>' +
+        '<span class="grow"><b style="display:block;font-size:15px;font-weight:600">Training · 18:30</b>' +
+        '<span class="sub" style="display:block;margin-top:2px">' + esc(VENUE.pitch) + ' · shin pads and water</span></span></div>' +
+        '<div class="row"><span style="flex:none;display:flex;flex-direction:column;align-items:center;width:44px">' +
+        '<span style="font:700 11px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;color:var(--lime)">Sat</span>' +
+        '<span class="tnum" style="font:400 24px/1 var(--display)">01</span></span>' +
+        '<span style="flex:none;width:1px;height:34px;background:#262626"></span>' +
+        '<span class="grow"><b style="display:block;font-size:15px;font-weight:600">Match v Hale End · 10:00</b>' +
+        '<span class="sub" style="display:block;margin-top:2px">Arrive 09:30 · home, Pitch 1</span></span>' +
+        '<button class="btn sm" data-go="match">Reply</button></div>' +
+        mapRow({ pitch: "Pitch 1", sub: "Hale Lane, N20 8AB · 14 min drive" }) + "</div>" +
+      '<div class="card" style="padding:16px"><span class="kicker">What we’re working on</span>' +
+        '<h2 style="margin-top:7px;font:400 21px/1.05 var(--display);text-transform:uppercase">' + esc(currentBlock().name) + "</h2>" +
+        '<p style="margin-top:8px;font-size:14px;line-height:1.45;color:var(--soft)">' + esc(currentBlock().c["Technical"]) + "</p>" +
+        '<div class="tags" style="margin-top:12px"><span class="tag">Technical · practising</span><span class="tag">Social · demonstrated</span></div></div>' +
+      '<div class="sec"><header><h2>His development plan</h2><span>set by the coach</span></header>' +
+        linkRow("Four targets for this block", "One per corner · reviewed in week 8", "idp", false) + "</div>" +
+      '<div class="card" style="padding:16px"><span class="kicker" style="color:var(--muted)">At home this week</span>' +
+        '<p style="margin-top:8px;font-size:14px;line-height:1.45">Ten minutes of two-touch passing against a wall. Left foot, then right.</p></div>';
+  };
+
+  V.messages = function () {
+    var msgs = [
+      { f: "Coach Ryan", t: "Falcons U15", m: "Pitch 3 tonight, not Pitch 1. Same time.", d: "17:04", lime: true },
+      { f: "Box to Box Academy", t: "All families", m: "Saturday fixtures are up. Please reply with availability by Thursday.", d: "Mon" },
+      { f: "Coach Dani", t: "Titans U12", m: "Great session tonight — the back three were excellent.", d: "Sun" }
+    ];
+    return '<div class="title"><span class="eyebrow">3 threads</span><h1>Messages</h1></div>' +
+      '<div class="sec">' + msgs.map(function (m) {
+        return '<div class="row" style="align-items:flex-start">' +
+          '<span class="dot' + (m.lime ? "" : " dim") + '" style="margin-top:7px"></span>' +
+          '<span class="grow"><span style="display:flex;align-items:baseline;gap:8px">' +
+          '<b class="grow" style="font-size:15px;font-weight:600">' + esc(m.f) + "</b>" +
+          '<span class="sub" style="font-size:12px">' + esc(m.d) + "</span></span>" +
+          '<span class="sub" style="display:block;font-size:12px;margin-top:1px">' + esc(m.t) + "</span>" +
+          '<span style="display:block;margin-top:5px;font-size:14px;line-height:1.35;color:var(--soft)">' + esc(m.m) + "</span></span></div>";
+      }).join("") + "</div>";
+  };
+
+  V.players = function () {
+    return '<div class="title"><span class="eyebrow">Falcons U15</span><h1>Players</h1></div>' +
+      '<div class="sec">' + SQUAD.map(function (p) {
+        return '<button class="row" data-go="passport" style="cursor:pointer;width:100%;text-align:left;color:var(--ink)">' +
+          '<span class="av" style="width:38px;height:38px;font-size:13px;border-width:1px">' + p.in + "</span>" +
+          '<span class="grow" style="font-size:15px;font-weight:600">' + esc(p.n) + "</span>" +
+          '<span style="flex:none;color:var(--muted)">' + ICON.chev + "</span></button>";
+      }).join("") + "</div>";
+  };
+
+  V.coaches = function () {
+    var cs = [
+      { n: "Ryan C.", t: "Falcons U15 · Elite U13", s: "On today", ok: true, st: "£420 this month" },
+      { n: "Dani P.", t: "Titans U12", s: "On today", ok: true, st: "£310 this month" },
+      { n: "Sam W.", t: "Vipers U10", s: "Time off requested", ok: false, st: "£285 this month" }
+    ];
+    return '<div class="title"><span class="eyebrow">Academy staff</span><h1>Coaches</h1></div>' +
+      '<div class="sec"><header><h2>This week</h2></header>' + cs.map(function (c) {
+        return '<div class="row"><span class="dot' + (c.ok ? "" : " off") + '"></span>' +
+          '<span class="grow"><b style="display:block;font-size:15px;font-weight:600">' + esc(c.n) + "</b>" +
+          '<span class="sub" style="display:block;margin-top:2px">' + esc(c.t) + "</span></span>" +
+          '<span style="flex:none;text-align:right"><span style="display:block;font-size:12px;font-weight:600;color:' + (c.ok ? "var(--muted)" : "var(--ink)") + '">' + esc(c.s) + "</span>" +
+          '<span class="sub tnum" style="display:block;font-size:12px">' + esc(c.st) + "</span></span></div>";
+      }).join("") + "</div>" +
+      '<p class="sub" style="padding:0 4px">Statement totals come from GPS verified check-ins only.</p>';
+  };
+
+  /* ---------- chrome ---------- */
+  function topRight() {
+    var r = state.role;
+    if (r === "coach" || r === "director") {
+      return '<button class="chip" data-sheet="team">' + esc(teamBy(state.team).name) + ICON.down + "</button>";
+    }
+    if (r === "parent") return '<span class="chip" style="cursor:default">Parent</span>';
+    return '<span class="chip lime" style="cursor:default">Player</span>';
+  }
+
+  function renderRoles() {
+    var rs = [["coach", "Coach"], ["player", "Player"], ["parent", "Parent"], ["director", "Director"]];
+    document.getElementById("roles").innerHTML =
+      '<span class="lab">Preview as</span>' + rs.map(function (r) {
+        return '<button data-role="' + r[0] + '" aria-pressed="' + (state.role === r[0]) + '">' + r[1] + "</button>";
+      }).join("");
+  }
+
+  function renderTabs() {
+    var items = NAV[state.role];
+    document.getElementById("tabs").innerHTML = items.map(function (it) {
+      var cur = it[0] === state.view || (it[0] === "passport" && state.view === "corner");
+      return '<button data-tab="' + it[0] + '" ' + (cur ? 'aria-current="page"' : "") + '>' +
+        ICON[it[2]] + "<span>" + it[1] + "</span></button>";
+    }).join("");
+  }
+
+  function render() {
+    document.getElementById("topRight").innerHTML = topRight();
+    renderRoles();
+    renderTabs();
+    var fn = V[state.view] || V[ROOTS[state.role]];
+    document.getElementById("view").innerHTML = fn();
+    document.getElementById("main").scrollTop = 0;
+    save();
+  }
+
+  function go(view) {
+    if (view === "more") { openSheet("more"); return; }
+    state.view = view;
+    render();
+  }
+
+  /* ---------- sheet ---------- */
+  function openSheet(kind) {
+    var sheet = document.getElementById("sheet"), scrim = document.getElementById("scrim");
+    var h;
+    if (kind === "team") {
+      h = '<header><h2>Team</h2><button class="iconbtn" data-close="1" aria-label="Close">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg></button></header>' +
+        '<div class="links">' + TEAMS.map(function (t) {
+          return '<button data-pickteam="' + t.id + '"' + (t.id === state.team ? ' style="border-color:var(--lime);color:var(--lime)"' : "") + ">" + esc(t.name) + "</button>";
+        }).join("") + "</div>";
+    } else {
+      var list = MORE[state.role] || MORE.coach;
+      h = '<header><h2>More</h2><button class="iconbtn" data-close="1" aria-label="Close">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg></button></header>' +
+        '<div class="links">' + list.map(function (m) {
+          return '<button data-go="' + m[0] + '"><span style="flex:none;color:var(--lime)">' +
+            ICON[m[2]].replace('width="21" height="21"', 'width="18" height="18"') + "</span>" + m[1] + "</button>";
+        }).join("") + "</div>";
+    }
+    sheet.innerHTML = h;
+    sheet.hidden = false; scrim.hidden = false;
+  }
+  function closeSheet() {
+    document.getElementById("sheet").hidden = true;
+    document.getElementById("scrim").hidden = true;
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-role],[data-tab],[data-go],[data-corner],[data-sub],[data-team],[data-av],[data-act],[data-ach],[data-sheet],[data-close],[data-pickteam]");
+    if (!t) return;
+
+    if (t.hasAttribute("data-role")) {
+      state.role = t.getAttribute("data-role");
+      state.view = ROOTS[state.role];
+      closeSheet(); render(); return;
+    }
+    if (t.hasAttribute("data-sheet")) { openSheet(t.getAttribute("data-sheet")); return; }
+    if (t.hasAttribute("data-close")) { closeSheet(); return; }
+    if (t.hasAttribute("data-pickteam")) { state.team = t.getAttribute("data-pickteam"); closeSheet(); render(); return; }
+    if (t.hasAttribute("data-tab")) { closeSheet(); go(t.getAttribute("data-tab")); return; }
+    if (t.hasAttribute("data-go")) { e.preventDefault(); closeSheet(); go(t.getAttribute("data-go")); return; }
+    if (t.hasAttribute("data-corner")) { state.corner = t.getAttribute("data-corner"); go("corner"); return; }
+    if (t.hasAttribute("data-sub")) { state.sub = t.getAttribute("data-sub"); render(); return; }
+    if (t.hasAttribute("data-team")) { state.team = t.getAttribute("data-team"); render(); return; }
+
+    if (t.hasAttribute("data-ach")) {
+      state.ach = t.getAttribute("data-ach");
+      [].forEach.call(document.querySelectorAll("[data-ach]"), function (b) {
+        var on = b.getAttribute("data-ach") === state.ach;
+        b.setAttribute("aria-checked", on);
+        b.style.background = on ? "var(--lime)" : "";
+        b.style.borderColor = on ? "var(--lime)" : "";
+        b.style.color = on ? "var(--on-lime)" : "";
+      });
+      return;
+    }
+
+    if (t.hasAttribute("data-av")) {
+      var id = t.getAttribute("data-av"), val = t.getAttribute("data-val");
+      var cur = state.avail[id] || (function () { for (var i = 0; i < SQUAD.length; i++) if (SQUAD[i].in === id) return SQUAD[i].a; return "none"; })();
+      state.avail[id] = cur === val ? "none" : val;
+      render(); return;
+    }
+
+    if (t.hasAttribute("data-act")) {
+      var a = t.getAttribute("data-act");
+      if (a === "done" && !state.done) {
+        state.done = true; state.xp += 15;
+        render(); toast("+15 XP · Technical");
+      } else if (a === "checkin") {
+        state.checkedIn = true;
+        state.inAt = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+        render(); toast("Checked in · GPS verified");
+      } else if (a === "recall") {
+        toast("4 recall cards queued");
+      } else if (a === "target") {
+        toast("Target editor opens here");
+      } else if (a === "checkout") {
+        var out = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+        state.log.unshift({ t: "Falcons U15 · today", s: "In " + state.inAt + " · Out " + out + " · GPS verified", k: "ok" });
+        state.checkedIn = false; state.inAt = "";
+        render(); toast("Checked out");
+      }
+      return;
+    }
+  });
+  document.addEventListener("submit", function (e) {
+    if (e.target.id !== "logform") return;
+    e.preventDefault();
+    var val = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+    var cur = blockWeek();
+    state.logs.unshift({
+      wk: cur, title: weekInfo(cur).title, team: state.team,
+      date: val("lf-date") || weekIso(cur),
+      players: Math.max(0, parseInt(val("lf-n"), 10) || 0),
+      coach: val("lf-coach"), ach: state.ach, evidence: val("lf-ev"),
+      keep: val("lf-keep"), change: val("lf-change"),
+      players_note: val("lf-play"), interventions: val("lf-int")
+    });
+    state.sub = "syllabus";
+    go("develop");
+    toast("Saved to log");
+  });
+
+  document.getElementById("scrim").addEventListener("click", closeSheet);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
+
+  render();
+})();
+</script>
+</body></html>

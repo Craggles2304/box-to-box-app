@@ -1,0 +1,35 @@
+/* Box to Box Academy — modular development journey. Designed to embed, not replace existing navigation. */
+.btb-journey{--btb-green:#bcff20;--btb-bg:#0a110b;--btb-panel:#132018;--btb-line:#2c4332;--btb-ink:#f2f7ef;--btb-muted:#b6c8b8;color:var(--btb-ink);font:400 15px/1.5 system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--btb-bg);border-radius:18px;padding:clamp(12px,3vw,24px);max-width:1200px;margin:0 auto}
+.btb-journey *{box-sizing:border-box}.btb-journey button,.btb-journey textarea,.btb-journey select{font:inherit}
+.btb-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}.btb-header small{color:var(--btb-green);font-size:.72rem;letter-spacing:.14em;font-weight:800}.btb-header h2{font-size:clamp(1.45rem,4vw,2.25rem);margin:5px 0;font-weight:900}.btb-role{border-radius:100px;border:1px solid var(--btb-green);padding:6px 12px;color:var(--btb-green);font-size:.7rem;white-space:nowrap;font-weight:800}.btb-panel{padding:clamp(15px,3vw,23px);background:var(--btb-panel);border:1px solid var(--btb-line);border-radius:16px;margin:0 0 18px}.btb-panel h3{margin:0 0 10px;font-size:1.25rem}.btb-intro{margin:0 0 20px;color:var(--btb-muted)}.btb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.btb-corner,.btb-review{padding:15px;border:1px solid var(--btb-line);background:#0e1911;border-radius:12px;min-width:0}.btb-corner small{display:block;color:var(--btb-muted);margin:5px 0 13px}.btb-corner label,.btb-review label{display:block;font-size:.85rem;color:var(--btb-muted);font-weight:600;margin:12px 0}.btb-corner textarea,.btb-review textarea,.btb-corner select{width:100%;display:block;margin:5px 0 0;padding:10px 12px;background:#101d14;color:#fff;border:1px solid #49604e;border-radius:9px;resize:vertical;min-height:42px}.btb-journey :is(textarea,select,button):focus-visible{outline:3px solid var(--btb-green);outline-offset:2px}.btb-top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.btb-badge{display:inline-block;background:#263a22;color:var(--btb-green);padding:3px 9px;border-radius:40px;font-size:.72rem;font-weight:700;text-transform:capitalize}.btb-review{margin:10px 0}.btb-review p{margin:10px 0}.btb-review ol{padding-left:22px}.btb-review li{margin:4px 0;color:var(--btb-muted)}.btb-actions{display:flex;flex-wrap:wrap;gap:10px}.btb-btn{background:var(--btb-green);color:#081207;border:0;border-radius:9px;padding:11px 16px;min-height:42px;cursor:pointer;font-weight:800;margin-top:7px}.btb-btn:hover{filter:brightness(1.12)}.btb-btn:disabled{opacity:.45;cursor:not-allowed}.btb-outline{color:var(--btb-green);background:transparent;border:1px solid var(--btb-green)}.btb-flash{font-size:.91rem;padding:0 3px;min-height:1em;margin-bottom:9px}.btb-error{color:#ffc1b9!important}.btb-home{padding:11px 13px;background:#1d3421;border-radius:10px;color:#e5f5df}.btb-empty{color:var(--btb-muted);border:1px dashed var(--btb-line);border-radius:11px;padding:18px}.btb-journey[aria-busy="true"]{opacity:.83;cursor:progress}
+@media(max-width:690px){.btb-grid{grid-template-columns:1fr}.btb-header{align-items:flex-start;flex-direction:column}.btb-panel{padding:14px}}
+/* V2: visible save acknowledgements, clear completed home missions, reduced motion. */
+.btb-flash:not(:empty){padding:10px 12px;margin:6px 0 18px;background:#1d3421;border-left:3px solid var(--btb-green);border-radius:5px;font-weight:650}
+.btb-flash.btb-error{background:#361f1b;border-left-color:#ffc1b9}
+.btb-done{display:inline-flex;align-items:center;gap:6px;background:#203c27;border-radius:8px;padding:7px 10px;color:var(--btb-green);font-weight:750;font-size:.84rem}
+@media(prefers-reduced-motion:reduce){.btb-journey *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Coach Action Engine — operational prompts without personal ability scores. */
+.btb-coach-action{border-left:3px solid var(--btb-green)}.btb-coach-action .btb-top b{font-size:.98rem}.btb-coach-action small{color:var(--btb-muted)}
+
+/* V5 Coach Simple Mode — one actionable form up front, everything else optional. */
+.btb-simple-intro{background:linear-gradient(130deg,#182d16,#132019);border:1px solid #718f32;border-radius:16px;padding:clamp(16px,3vw,25px);margin:10px 0 14px}
+.btb-simple-eyebrow{color:var(--btb-green);letter-spacing:.13em;font-weight:800;font-size:.7rem}
+.btb-simple-intro h3{font-size:clamp(1.4rem,4vw,1.8rem);margin:7px 0 8px}
+.btb-simple-intro p{color:var(--btb-muted);margin:0 0 12px}
+.btb-simple-counts{display:flex;gap:8px;flex-wrap:wrap}.btb-simple-counts span{padding:5px 10px;border:1px solid var(--btb-line);border-radius:100px;font-size:.78rem}
+.btb-simple-main .btb-panel{border-color:#749f37}.btb-simple-main .btb-grid{grid-template-columns:1fr}
+.btb-more-tools{border:1px solid var(--btb-line);border-radius:16px;margin:15px 0;background:var(--btb-panel)}
+.btb-more-tools>summary{cursor:pointer;min-height:54px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 18px;color:var(--btb-green);font-weight:850;list-style:none}
+.btb-more-tools>summary::-webkit-details-marker{display:none}
+.btb-more-tools>summary small{color:var(--btb-muted);font-size:.76rem;font-weight:400}
+.btb-more-tools[open]>summary{border-bottom:1px solid var(--btb-line)}
+.btb-more-body{padding:15px}.btb-more-body .btb-panel{margin-bottom:12px}
+@media(max-width:600px){.btb-simple-counts{flex-direction:column;align-items:flex-start}.btb-more-tools>summary{align-items:flex-start;flex-direction:column}}
+
+/* V47: A discreet, coach-only family-link warning from the guarded server queue. */
+.btb-journey .btb-family-link-alert{margin:0 0 18px;padding:17px 19px;border:1px solid rgba(182,255,0,.45);border-left:4px solid #b6ff00;border-radius:13px;background:linear-gradient(120deg,rgba(182,255,0,.10),rgba(182,255,0,.015));color:inherit}
+.btb-journey .btb-family-link-alert strong{display:block;font-size:.74rem;font-weight:800;letter-spacing:.09em;color:#b6ff00}
+.btb-journey .btb-family-link-alert p{margin:9px 0 13px;line-height:1.4;max-width:60ch}
+.btb-journey .btb-family-link-alert button{padding:11px 14px;border-radius:9px;border:0;background:#b6ff00;color:#101010;font-weight:800;cursor:pointer}
+.btb-journey .btb-family-link-alert button:focus-visible{outline:2px solid #fff;outline-offset:3px}

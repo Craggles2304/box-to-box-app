@@ -1,0 +1,30 @@
+/* Scoped to the parent first-login experience. Academy black + volt green. */
+.btb-parent-onboarding,.btb-guardian-setup{font-family:inherit;color:#eaf1e8;background:transparent;max-width:760px;margin:0 auto}
+.btb-parent-welcome,.btb-coach-guardian{background:#101712;border:1px solid #27382b;border-radius:18px;padding:clamp(14px,3vw,24px)}
+.btb-parent-welcome header small,.btb-coach-guardian header small{font-weight:800;letter-spacing:.095em;color:#b4f759}
+.btb-parent-welcome h2,.btb-coach-guardian h2{font-size:clamp(22px,4vw,31px);line-height:1.18;margin:9px 0}
+.btb-parent-welcome p,.btb-coach-guardian p{line-height:1.5;color:#cad8cb;margin:9px 0 13px}
+.btb-parent-welcome label{font-weight:750;display:block;margin:14px 0 8px}
+.btb-parent-welcome input[name=parent_code]{box-sizing:border-box;width:100%;background:#202c24;border:1px solid #526855;color:#fff;border-radius:11px;padding:13px 12px;font-size:18px;letter-spacing:.07em}
+.btb-parent-onboarding button,.btb-guardian-setup button{min-height:44px;padding:10px 15px;border:1px solid #aef156;border-radius:10px;background:#aef156;color:#132013;font:inherit;font-weight:800;cursor:pointer}
+.btb-parent-onboarding button:disabled,.btb-guardian-setup button:disabled{opacity:.55;cursor:wait}
+.btb-parent-consent{display:flex!important;gap:10px;align-items:flex-start;font-size:14px;line-height:1.4;color:#d4e0d6;font-weight:550!important}
+.btb-parent-consent input{width:18px;height:18px;flex:none;accent-color:#aef156}
+.btb-parent-privacy,.btb-add-another{border-top:1px solid #334438;margin:18px 0;padding-top:13px;color:#d5e3d6}
+.btb-parent-privacy summary,.btb-add-another summary{cursor:pointer;min-height:44px;padding-top:8px;font-weight:650}
+.btb-parent-help,.btb-guardian-note{font-size:13px}
+.btb-child-pills{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.btb-child-pills button{background:#263729;color:#e9f3e8;border-color:#405e41}
+.btb-child-pills button[aria-current=true]{background:#aef156;color:#142015}
+.btb-child-summary{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;border-top:1px solid #354939;padding:13px 0;font-size:14px}
+.btb-child-summary span{color:#b7cdb7}
+.btb-parent-onboarding :focus-visible,.btb-guardian-setup :focus-visible{outline:3px solid #bafc71;outline-offset:3px}
+.btb-link-queue{padding:0;list-style:none;margin:14px 0}
+.btb-link-queue li{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 4px;border-bottom:1px solid #344436}
+.btb-link-queue li>div{min-width:0;overflow-wrap:anywhere}
+.btb-link-queue small{display:block;color:#bacbbb;margin-top:4px;font-size:12px}
+.btb-code-output{background:#1d2b1f;border:1px solid #718b5e;border-radius:12px;padding:14px;margin-top:20px}
+.btb-code-output[hidden]{display:none}
+.btb-code-value{font-size:clamp(20px,4vw,34px);letter-spacing:.13em;overflow-wrap:anywhere;color:#b4ff61}
+.btb-guardian-good{padding:14px;border-radius:11px;background:#223626;color:#dff9d5}
+@media(max-width:390px){.btb-link-queue li{align-items:stretch;flex-direction:column}.btb-link-queue button{width:100%}}
