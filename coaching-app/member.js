@@ -75,6 +75,26 @@
     return Comms.familyPlayers().filter(p => { const P = Comms.st.pp[p.id]; if (!P) { setTimeout(() => Comms.loadPassport(p.id)); return false; } return !P.error && Comms.careNeedsReview(P.care); });
   }
   document.addEventListener("click", e => { if (e.target.closest("[data-careopen]")) Comms.st.ppOpen = "care"; }, true);
+
+  // Session-day check-in prompt: opens once per session, from an hour before kick-off until it ends.
+  function maybeCheckinPopup() {
+    if (document.getElementById("ci-sheet")) return;
+    const now = Date.now();
+    const live = occurrences(today0(), addDays(today0(), 1)).filter(o => o.e.kind !== "meeting" && now >= o.start.getTime() - 3600e3 && now <= o.end.getTime());
+    if (!live.length) return;
+    const o = live[0], key = "b2b.ciPrompt", stamp = (o.e.id || o.e.title) + "@" + o.start.toISOString();
+    let seen = {}; try { seen = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) {}
+    if (seen[stamp]) return;
+    try { const day = new Date().toLocaleDateString("en-CA"), done = JSON.parse(localStorage.getItem("b2b.ciDone") || "{}")[day]; if (done && done.length) return; } catch (e) {}
+    seen = { [stamp]: 1 }; try { localStorage.setItem(key, JSON.stringify(seen)); } catch (e) {}
+    let tries = 0;
+    const open = () => {
+      if (S.tab !== "home" || document.getElementById("ci-sheet")) return;
+      if (document.querySelector(".welcome") && tries++ < 180) return setTimeout(open, 1000); // wait for the welcome tour to close
+      Comms.checkinSheet(o.e.group_id || "", o.start.toISOString(), false);
+    };
+    setTimeout(open, 1500);
+  }
   function homeView() {
     const first = (A.name || "").split(" ")[0] || "there";
     const next = occurrences(today0(), addDays(today0(), 21)).filter(o => o.end > new Date()).slice(0, 20);
@@ -83,12 +103,12 @@
     const now = new Date(), today = occurrences(today0(), addDays(today0(), 1)).filter(o => o.e.kind !== "meeting" && o.end.getTime() + 3600e3 > now.getTime()).map(o => ({ title: o.e.title, start: o.start, group_id: o.e.group_id }));
     return `<section class="view home2">
       <div class="hero2"><span class="hero2-k">${esc(fmtDay(today0(), { weekday: "long", day: "numeric", month: "long" }))} · ${esc(Comms.myGroups().map(Comms.gname).join(", "))}</span><h1>${A.role==='parent'?'Parent Hub':'Your football day'}</h1><p>Hi, ${esc(first)}. Training focus, game focus and your coach’s feedback.</p></div>
+      ${Comms.checkinCard(today)}
       ${A.role === "parent" ? '<div id="btb-parent-first" role="region" aria-label="Your child’s learning journey"><p>Loading your family journey…</p></div>' : ''}
       <details class="family-routine-toggle"><summary>Football practice at home</summary><div id="btb-keepup-home" aria-label="Optional football practice routine"></div></details>
       ${A.role !== "player" && savedClaim() ? `<a class="care-due claim-due" href="#dev"><span class="care-ic" aria-hidden="true">${ic("id")}</span><span><b>Link your child's Player Passport</b><small>You scanned a code from the coach. Tap to finish linking.</small></span><i aria-hidden="true">›</i></a>` : ""}
       ${A.role !== "player" && Comms.st.players && !Comms.familyPlayers().length ? `<a class="care-due passport-prompt" href="#me"><span class="care-ic" aria-hidden="true">${ic("id")}</span><span><b>Create your child's Player Passport</b><small>Add your child to see attendance, skills and progress in the app.</small></span><i aria-hidden="true">›</i></a>` : ""}
       ${Comms.spotlightHtml({ coach: false })}
-      ${Comms.checkinCard(today)}
       ${careDue().map(k => { const P = Comms.st.pp[k.id], missing = Comms.careMissing(P && P.care); return `<a class="care-due" href="#passport/${esc(k.id)}" data-careopen><span class="care-ic" aria-hidden="true">${ic("shield")}</span><span><b>${missing.length ? `Complete ${esc(k.name.split(" ")[0])}'s Player Passport` : `Review ${esc(k.name.split(" ")[0])}'s Player Passport`}</b><small>${missing.length ? `Still to confirm: ${esc(missing.join(", "))}` : `Please check and confirm these details for ${esc(Comms.currentSeason())}. Last reviewed ${P.care.reviewed_at ? esc(new Date(P.care.reviewed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })) : "not yet"}.`}</small></span><i aria-hidden="true">›</i></a>`; }).join("")}
       ${(Comms.st.plans || []).filter(p => p.published && new Date(p.kickoff) < addDays(today0(), 8)).slice(0, 2).map(p => Comms.planCard(p, "#match/" + p.id)).join("")}
       ${A.role === "player" && Comms.myPlayer() ? Comms.passportView(Comms.myPlayer().id, { compact: true }) : ""}
@@ -310,6 +330,7 @@
       const slot=m.querySelector('#btb-parent-first');if(slot)openNewParentJourney(slot);
     }
     Comms.bindRsvp(m); Comms.bindAnn(m); Comms.bindCheckin(m); Comms.bindPassport(m); bindFamily(m);
+    if (S.tab === "home") maybeCheckinPopup();
     m.querySelectorAll("[data-week]").forEach(b => b.onclick = () => { const v = +b.dataset.week; S.week = v ? S.week + v : 0; S.day = null; render(); });
     m.querySelectorAll("[data-mday]").forEach(b => b.onclick = () => { S.day = b.dataset.mday; render(); const h = document.querySelector(".cal-dayhead"); if (h && window.innerWidth < 700) h.scrollIntoView({ behavior: "smooth", block: "start" }); });
     if (S.tab === "chat") { m.querySelectorAll("[data-chatopen]").forEach(b => b.onclick = () => { S.chatGroup = b.dataset.chatopen || null; Comms.stopChat(); render(); window.scrollTo(0, 0); });
