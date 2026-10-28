@@ -2170,7 +2170,7 @@ function coachSubs() {
   const c = state.cal, admin = ACCESS.admin;
   const pend = admin && c ? (c.holidays || []).filter(h => h.status === "pending").length : 0;
   const cov = c ? (c.covers || []).filter(x => x.status === "open" && x.needed_for !== ACCESS.uid).length : 0;
-  const subs = [["attendance", "Player attendance"], ["statements", "My statements"], ["players", "Players"], ["checkin", "GPS check-in / out"], ["prep", "Prep", prepDue().filter(x => !prepRec(x.s.key).pass).length], ["develop", "Development"], ["syllabus", "Syllabus"], ["off", "Time off"], ["cover", "Cover", cov]];
+  const subs = [...(ACCESS.admin ? [] : [["attendance", "Player attendance"]]), ["statements", "My statements"], ["players", "Players"], ["checkin", "GPS check-in / out"], ["prep", "Prep", prepDue().filter(x => !prepRec(x.s.key).pass).length], ["develop", "Development"], ["syllabus", "Syllabus"], ["off", "Time off"], ["cover", "Cover", cov]];
   if (admin) subs.push(["admin", "Approvals", pend]);
   if (!Comms.st.rules) setTimeout(() => Comms.loadRules());
   subs.push(["comply", "Compliance", complyDue()]);
@@ -2554,13 +2554,14 @@ function checkinHubView() {
   return `<section class="view"><div id="coach-gps-root"></div>${adminHtml}</section>`;
 }
 window.B2B_GPS_SAVED=()=>{state.cin=null;loadCin(true);calLoad(true)};
+const CHECKIN_RADIUS_M = 805; // half a mile
 function getPos() { return new Promise(res => { if (!navigator.geolocation) return res(null); navigator.geolocation.getCurrentPosition(p => res(p.coords), () => res(null), { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }); }); }
 async function coachCheckin(eventId, btn) {
   const x = todaySessions(null).find(s => s.e.id === eventId); if (!x) return;
   btn.disabled = true; btn.textContent = "Finding your location…";
   const c = await getPos(), V = Object.fromEntries(((state.cin && state.cin.venues) || []).map(v => [v.key, v])), vk = venueKey(x.e.location), v = V[vk];
   let status = "nolocation", dist = null;
-  if (c) { if (v && v.lat != null) { dist = metres(c.latitude, c.longitude, v.lat, v.lng); status = dist <= v.radius_m + Math.min(c.accuracy || 0, 300) ? "at" : "away"; } else status = "unknown"; }
+  if (c) { if (v && v.lat != null) { dist = metres(c.latitude, c.longitude, v.lat, v.lng); status = dist <= Math.max(v.radius_m || 0, CHECKIN_RADIUS_M) + Math.min(c.accuracy || 0, 300) ? "at" : "away"; } else status = "unknown"; }
   const row = { coach_id: ACCESS.uid, event_id: x.e.id, session_date: isoOf(today0()), group_id: x.e.group_id, title: x.e.title, venue: vk || x.e.location || null, at: new Date().toISOString(),
     lat: c ? +c.latitude.toFixed(5) : null, lng: c ? +c.longitude.toFixed(5) : null, accuracy_m: c ? Math.round(c.accuracy) : null, distance_m: dist, status };
   const { error } = await window.B2B_SB.from("coach_checkins").upsert(row, { onConflict: "coach_id,event_id,session_date" });
@@ -2571,7 +2572,7 @@ async function coachCheckin(eventId, btn) {
 async function setVenueHere(key, btn) {
   btn.disabled = true; btn.textContent = "Finding you…";
   const c = await getPos(); if (!c) { btn.disabled = false; btn.innerHTML = ic("pin") + " Set to where I am"; return toast("Couldn't get your location. Allow location for this app."); }
-  const { error } = await window.B2B_SB.from("venues").update({ lat: +c.latitude.toFixed(5), lng: +c.longitude.toFixed(5), approx: false, radius_m: 400, updated_at: new Date().toISOString() }).eq("key", key);
+  const { error } = await window.B2B_SB.from("venues").update({ lat: +c.latitude.toFixed(5), lng: +c.longitude.toFixed(5), approx: false, radius_m: CHECKIN_RADIUS_M, updated_at: new Date().toISOString() }).eq("key", key);
   if (error) { btn.disabled = false; return toast("Couldn't save: " + error.message); }
   toast("Venue spot saved"); await loadCin(true); render();
 }
@@ -2859,6 +2860,12 @@ const dayBridge={
    state.prepLearn=b.dataset.preplearn?{key,i:0}:null;state.prepRun=b.dataset.preptest?{key,i:0,right:0,res:[],picked:null}:null;state.coachSub='prep';location.hash='#coaches';
   });
  }
+};
+// Director dashboard: player attendance register and spreadsheet export.
+window.B2B_PLAYER_ATTENDANCE={
+ groups:()=>(ACCESS.admin?ALL_GROUPS:GROUPS).map(g=>({id:g.id,name:g.long})),
+ open:(group,slot)=>dayBridge.attendance(group,slot,'training'),
+ exportSheet:()=>exportSheet()
 };
 function dayPrepCard({s,groups},review=true){
  const r=prepRec(s.key),ready=dayPrepReady(r),n=prepQs(s).length;
