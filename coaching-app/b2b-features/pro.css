@@ -482,3 +482,4 @@ body.btb-pro .pp-mgrid b{font:400 28px/1 var(--pro-display)!important;display:bl
 body.btb-pro .pp-mgrid small{font:700 11px/1 var(--pro-cond)!important;letter-spacing:.1em;text-transform:uppercase;color:var(--pro-mute)!important}
 body.btb-pro .pp-mnum i{background:var(--pro-s3)!important;border-radius:999px!important}
 @media(min-width:760px){body.btb-pro .day-shortcuts{column-gap:32px!important}body.btb-pro .day-shortcuts>button:not(.day-action){font-size:20px!important}}
+body.btb-pro .pp22-goal>div{flex:1 1 0;min-width:0}
