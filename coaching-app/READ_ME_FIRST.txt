@@ -1,3 +1,31 @@
+BOX TO BOX — V51 "PRO" DESIGN PASS
+Built 28 October 2026 on top of V50. Same features, same information, same data.
+
+WHAT CHANGED
+- New design layer b2b-features/pro.css (loaded last): pure black, one volt
+  green (#CCFF00), Anton headings, condensed caps labels, pill buttons, flat
+  cards with one corner radius. Replaces the green-tinted glow cards.
+- Page headers are flat (no glowing hero box); the duplicate team label next
+  to the team picker is hidden.
+- Player Passport: the three stacked header boxes (passport banner, profile,
+  rank) are now one athlete card with name, position, team, rank and XP bar.
+  Tabs stay pinned while you scroll. Stats sit in one row. Four Corners are a
+  tidy 2x2. The shortcut tiles are now a list with arrows.
+- Coach passport (Coaching day > Player Passports): tighter header, task card,
+  smaller text boxes, collapsible "More coaching tools".
+- Tactics Hub: overview is a numbered list; tab bar fits on a phone; pitch
+  and cue chips restyled; Save button stays in reach at the bottom.
+- Coach Learning: one header with this week's progress; stats, steps,
+  ratings and pathway restyled.
+- Service worker cache and app version bumped so phones pick up the change.
+
+STILL TRUE FROM V50
+- auth.js only lets the director account sign in ("Private preview").
+  Remove that line in auth.js before giving this to all coaches and families.
+- Check it on a Netlify deploy preview first and keep the live deploy to roll
+  back to.
+
+----------------------------------------------------------------------
 BOX TO BOX — V50
 Built 27 October 2026 from the V49 package, with the font and navigation
 regressions fixed. Deployable to Netlify as a drop.

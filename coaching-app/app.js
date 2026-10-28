@@ -2896,7 +2896,7 @@ bindPrep=function(){
 developView=function(bare){
  const start=new Date();start.setHours(0,0,0,0);start.setDate(start.getDate()-(start.getDay()+6)%7);
  const count=Object.values(Local.cache.cpd||{}).filter(r=>r.coach===ACCESS.uid&&r.kind==='step'&&r.done&&r.doneAt&&new Date(r.doneAt)>=start).length;
- return `<section class="view"><p class="eyebrow">COACH DEVELOPMENT</p><h1 class="page-h">Better every week.</h1><p>${Math.min(count,2)} / 2 development steps completed this week.</p><div class="cpd-bar"><span style="width:${Math.min(count,2)*50}%"></span></div></section>`+dayBaseDevelop(bare);
+ return `<section class="view"><header class="pro-learn-head"><p class="eyebrow">Coach development</p><h1 class="page-h">Better every week.</h1><div class="pro-learn-row"><b>${Math.min(count,2)} / 2</b><small>development steps completed this week</small></div><div class="cpd-bar" role="progressbar" aria-label="Development steps this week" aria-valuemin="0" aria-valuemax="2" aria-valuenow="${Math.min(count,2)}"><span style="width:${Math.min(count,2)*50}%"></span></div></header></section>`+dayBaseDevelop(bare);
 };
 bindDevelop=function(){dayBaseBindDevelop();document.querySelectorAll('[data-cpdsetgoal]').forEach(b=>{b.hidden=true;});};
 render=function(){
