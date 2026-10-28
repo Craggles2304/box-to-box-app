@@ -483,3 +483,19 @@ body.btb-pro .pp-mgrid small{font:700 11px/1 var(--pro-cond)!important;letter-sp
 body.btb-pro .pp-mnum i{background:var(--pro-s3)!important;border-radius:999px!important}
 @media(min-width:760px){body.btb-pro .day-shortcuts{column-gap:32px!important}body.btb-pro .day-shortcuts>button:not(.day-action){font-size:20px!important}}
 body.btb-pro .pp22-goal>div{flex:1 1 0;min-width:0}
+/* four corners list on the coach passport */
+body.btb-pro .btb-corner-count{display:inline-block;margin-left:6px;color:var(--pro-volt);font:700 12px/1 var(--pro-cond);letter-spacing:.1em;text-transform:uppercase}
+body.btb-pro .btb-corner-list{display:flex;flex-direction:column;border:1px solid var(--pro-line);border-radius:var(--pro-r-sm);overflow:hidden}
+body.btb-pro .btb-corner-item{border-bottom:1px solid var(--pro-line);background:var(--pro-s2)}
+body.btb-pro .btb-corner-item:last-child{border-bottom:0}
+body.btb-pro .btb-corner-item>summary{display:flex;align-items:center;gap:12px;padding:14px;list-style:none;cursor:pointer;min-height:56px}
+body.btb-pro .btb-corner-item>summary::-webkit-details-marker{display:none}
+body.btb-pro .btb-corner-dot{flex:none;width:12px;height:12px;border-radius:50%;border:2px solid var(--pro-line-2)}
+body.btb-pro .btb-corner-item.is-set .btb-corner-dot{background:var(--pro-volt);border-color:var(--pro-volt)}
+body.btb-pro .btb-corner-name{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+body.btb-pro .btb-corner-name b{font:700 16px/1.1 var(--pro-cond);letter-spacing:.06em;text-transform:uppercase}
+body.btb-pro .btb-corner-name small{color:var(--pro-mute);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.btb-pro .btb-corner-item[open]{background:var(--pro-s1)}
+body.btb-pro .btb-corner-item[open]>summary{border-left:3px solid var(--pro-volt);padding-left:11px}
+body.btb-pro .btb-corner-item[open] .btb-corner-name small{white-space:normal}
+body.btb-pro .btb-journey .btb-corner-item .btb-corner{background:transparent!important;border:0!important;border-radius:0!important;padding:0 14px 16px!important}

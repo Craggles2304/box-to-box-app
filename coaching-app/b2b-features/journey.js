@@ -81,6 +81,20 @@ export function mountPlayerJourney({root,supabase,playerId,groupId,onConnectPare
         <button type="submit" class="btb-btn">Save ${CORNERS[key][0]}</button>
       </form>`;}).join('')}</div>`);
   }
+  // All four corners at a glance; the suggested one opens ready to edit.
+  function cornersAccordion(rows, openKey) {
+    const found=Object.fromEntries(rows.map(r=>[r.corner,r]));
+    const set=FOUR_CORNERS.filter(k=>found[k]).length;
+    return heading('The Four Corner Model',`<p class="btb-intro">One current target in each corner. Coaches choose what to work on; AI does not grade children. <b class="btb-corner-count">${set} of 4 set</b></p><div class="btb-corner-list">${FOUR_CORNERS.map(key=>{
+      const row=found[key];
+      return `<details class="btb-corner-item${row?' is-set':''}" ${key===openKey?'open':''}><summary><span class="btb-corner-dot" aria-hidden="true"></span><span class="btb-corner-name"><b>${CORNERS[key][0]}</b><small>${row?esc(row.target_text):esc(CORNERS[key][1])}</small></span>${row?badge(row.evidence_status.replaceAll('_',' ')):badge('Set focus')}</summary>
+      <form class="btb-corner" data-form="corner" data-corner="${key}">
+        <label>Current target<textarea name="target" required minlength="5" maxlength="240" rows="2">${esc(row?.target_text)}</textarea></label>
+        <label>Coach evidence<textarea name="evidence" maxlength="500" rows="2">${esc(row?.coach_observation)}</textarea></label>
+        <label>Learning stage<select name="stage">${['focus_set','practising','observed','demonstrated'].map(x=>`<option value="${x}" ${row?.evidence_status===x?'selected':''}>${x.replaceAll('_',' ')}</option>`).join('')}</select></label>
+        <button type="submit" class="btb-btn">Save ${CORNERS[key][0]}</button>
+      </form></details>`;}).join('')}</div>`);
+  }
   function draftsForm(rows) {
     return heading('Coach approval · Parent progress',`<p class="btb-intro">Only you or an authorised coach can publish a parent-facing update. Nothing goes live until approval.</p>${rows.length?rows.map(d=>
       `<form class="btb-review" data-form="approve" data-draft="${esc(d.id)}">
@@ -126,15 +140,15 @@ export function mountPlayerJourney({root,supabase,playerId,groupId,onConnectPare
     const nextMission=missions.find(m=>m.status!=='coach_verified');
     let title='Make one useful observation';
     let helper='Record one target or coaching observation. You do not need to complete every section.';
-    let body=cornersForm(corners,[FOUR_CORNERS[0]]);
+    let body=cornersAccordion(corners,FOUR_CORNERS[0]);
     if(drafts.length){
       title='Review one parent update';
       helper='Check the wording, approve it or reject it. Parents only see approved information.';
       body=draftsForm(drafts.slice(0,1));
     } else if(blank){
       title='Choose one '+CORNERS[blank][0].toLowerCase()+' target';
-      helper='One player, one target, one save. The other corners can be added later.';
-      body=cornersForm(corners,[blank]);
+      helper='One player, one target, one save. The other corners are listed below when you are ready.';
+      body=cornersAccordion(corners,blank);
     } else if(plan){
       title='Review one suggested session';
       helper='Check the practical activities before you approve anything.';
@@ -151,7 +165,7 @@ export function mountPlayerJourney({root,supabase,playerId,groupId,onConnectPare
       const check=corners.find(c=>c.evidence_status==='focus_set')?.corner || FOUR_CORNERS[0];
       title='Capture one coaching observation';
       helper='Use a specific example from the session; one short note is enough.';
-      body=cornersForm(corners,[check]);
+      body=cornersAccordion(corners,check);
     }
     const more=actions.filter(x=>x.priority==='now').length;
     const count=drafts.length+plans.filter(p=>p.status==='draft').length+suggestions.length;
@@ -166,7 +180,7 @@ export function mountPlayerJourney({root,supabase,playerId,groupId,onConnectPare
      <details class="btb-more-tools"><summary>More coaching tools <small>Only when you need them</small></summary>
      <div class="btb-more-body">
        ${nextCoachActions(actions)}
-       ${cornersForm(corners)}${draftsForm(drafts)}${plansForm(plans)}${missionReview(suggestions,missions,catalog)}
+       ${body.includes('btb-corner-list')?'':cornersAccordion(corners,null)}${draftsForm(drafts)}${plansForm(plans)}${missionReview(suggestions,missions,catalog)}
      </div></details>`;
   }
   async function draw(){
