@@ -499,3 +499,25 @@ body.btb-pro .btb-corner-item[open]{background:var(--pro-s1)}
 body.btb-pro .btb-corner-item[open]>summary{border-left:3px solid var(--pro-volt);padding-left:11px}
 body.btb-pro .btb-corner-item[open] .btb-corner-name small{white-space:normal}
 body.btb-pro .btb-journey .btb-corner-item .btb-corner{background:transparent!important;border:0!important;border-radius:0!important;padding:0 14px 16px!important}
+
+/* --- remaining pages: director dashboard, team session, parent hub --- */
+body.btb-pro #ops-panel button{border-radius:999px!important;font:700 14px/1 var(--pro-cond)!important;letter-spacing:.08em;text-transform:uppercase;min-height:42px;padding:0 18px!important;background:var(--pro-volt);color:#000;border:1.5px solid var(--pro-volt)!important}
+body.btb-pro #ops-panel button.secondary{background:transparent!important;color:var(--pro-ink)!important;border-color:var(--pro-line-2)!important}
+body.btb-pro #ops-panel #ops-tabs{display:flex;gap:4px;padding:4px;background:var(--pro-s1);border:1px solid var(--pro-line);border-radius:999px;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}
+body.btb-pro #ops-panel #ops-tabs button{margin:0!important;flex:1 0 auto;border:0!important;min-height:38px;font-size:13px!important}
+body.btb-pro #ops-panel #ops-tabs button[aria-selected="true"]{background:var(--pro-ink)!important;color:#000!important}
+body.btb-pro #ops-panel #ops-tabs button.secondary{color:var(--pro-mute)!important}
+body.btb-pro #ops-panel .ops-card{background:var(--pro-s1)!important;border:1px solid var(--pro-line)!important;border-radius:var(--pro-r)!important}
+body.btb-pro #ops-panel .ops-card h2{font:400 22px/1 var(--pro-display)!important;text-transform:uppercase}
+body.btb-pro #ops-panel .ops-back{font:700 13px/1 var(--pro-cond);letter-spacing:.14em;text-transform:uppercase;color:var(--pro-mute)}
+body.btb-pro :is(.btb-team-dna,.btb-team-simple,.btb-team-preview,.btb-team-focus,.btb-team-edit){background:var(--pro-s1)!important;border-color:var(--pro-line)!important;color:var(--pro-ink)!important;border-radius:var(--pro-r)!important;box-shadow:none!important}
+body.btb-pro .btb-team-dna :is(h2,h3){font-family:var(--pro-display)!important;font-weight:400!important;text-transform:uppercase}
+body.btb-pro .btb-team-dna :is(small,.eyebrow){color:var(--pro-volt)!important}
+body.btb-pro .btb-team-dna :is(p,.btb-team-empty){color:var(--pro-ink-2)}
+body.btb-pro .btb-team-dna{--volt:#ccff00;--line:#262626;--bg:#0e0e0e;--card:#161616;--muted:#8c8c8c}
+body.btb-pro :is(.btb-family-frame,.btb-family-section,.btb-family-news,.btb-family-focus,.btb-family-empty,.btb-family-placeholder,.btb-family-card){background:var(--pro-s1)!important;border-color:var(--pro-line)!important;color:var(--pro-ink)!important}
+body.btb-pro .btb-family-empty{background:var(--pro-s2)!important;border:1px dashed var(--pro-line-2)!important;border-radius:var(--pro-r-sm)!important}
+body.btb-pro .btb-family-frame header :is(small,span,p:first-child){color:var(--pro-volt)!important}
+body.btb-pro .btb-family-frame>header :is(h2,h3){font-family:var(--pro-display)!important;font-weight:400!important;text-transform:uppercase}
+body.btb-pro .btb-parent-live a,body.btb-pro .btb-parent-live button:not([disabled]){border-radius:999px!important}
+body.btb-pro .btb-coach-home{--volt:#ccff00;--ink:#fff;--muted:#8c8c8c;--stroke:#262626}
